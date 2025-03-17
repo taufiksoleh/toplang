@@ -1,0 +1,20 @@
+# This is a simple TopLang example program
+
+function main() {
+    print "Hello, World!"
+    
+    var count is 1
+    while count less than 5 {
+        print "Count is"
+        print count
+        count is count plus 1
+    }
+    
+    if count equals 5 {
+        print "Count reached 5!"
+    } else {
+        print "Something went wrong!"
+    }
+    
+    return 0
+}

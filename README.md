@@ -15,7 +15,7 @@ To build TopLang, you'll need:
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/toplang.git
+git clone https://github.com/taufiksoleh/toplang.git
 cd toplang
 ```
 

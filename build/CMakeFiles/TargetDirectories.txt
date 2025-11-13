@@ -1,9 +1,0 @@
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/intrinsics_gen.dir
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/omp_gen.dir
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/acc_gen.dir
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/ARMTargetParserTableGen.dir
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/AArch64TargetParserTableGen.dir
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/RISCVTargetParserTableGen.dir
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/top.dir
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/edit_cache.dir
-/Users/taufiksoleh/Personal/Compiler/toplang/build/CMakeFiles/rebuild_cache.dir

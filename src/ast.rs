@@ -71,7 +71,7 @@ pub enum Stmt {
         body: Vec<Stmt>,
     },
     Return(Option<Expr>),
-    ExprStmt(Expr),
+    Expression(Expr),
 }
 
 #[derive(Debug, Clone)]

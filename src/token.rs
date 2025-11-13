@@ -20,10 +20,13 @@ pub enum TokenType {
     Divide,
     Assign,
     Equals,
+    #[allow(dead_code)]
     NotEquals,
     Greater,
     Less,
+    #[allow(dead_code)]
     GreaterEquals,
+    #[allow(dead_code)]
     LessEquals,
     And,
     Or,
@@ -43,7 +46,9 @@ pub enum TokenType {
     Boolean(bool),
 
     // Special
+    #[allow(dead_code)]
     Comment,
+    #[allow(dead_code)]
     Eol,
     Eof,
     Unknown,

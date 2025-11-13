@@ -164,7 +164,7 @@ impl Parser {
             // It's a function call
             self.current -= 1; // Go back
             let expr = self.parse_expression()?;
-            Ok(Stmt::ExprStmt(expr))
+            Ok(Stmt::Expression(expr))
         }
     }
 

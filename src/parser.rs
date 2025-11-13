@@ -207,7 +207,17 @@ impl Parser {
         // Optional prompt
         let prompt = if !matches!(
             self.current_token().token_type,
-            TokenType::RightBrace | TokenType::Eof | TokenType::Variable | TokenType::Constant | TokenType::Print | TokenType::Ask | TokenType::If | TokenType::While | TokenType::For | TokenType::Return | TokenType::Identifier(_)
+            TokenType::RightBrace
+                | TokenType::Eof
+                | TokenType::Variable
+                | TokenType::Constant
+                | TokenType::Print
+                | TokenType::Ask
+                | TokenType::If
+                | TokenType::While
+                | TokenType::For
+                | TokenType::Return
+                | TokenType::Identifier(_)
         ) {
             Some(self.parse_expression()?)
         } else {
@@ -477,7 +487,16 @@ impl Parser {
                 loop {
                     if matches!(
                         self.current_token().token_type,
-                        TokenType::RightBrace | TokenType::Eof | TokenType::Variable | TokenType::Constant | TokenType::Print | TokenType::Ask | TokenType::If | TokenType::While | TokenType::For | TokenType::Return
+                        TokenType::RightBrace
+                            | TokenType::Eof
+                            | TokenType::Variable
+                            | TokenType::Constant
+                            | TokenType::Print
+                            | TokenType::Ask
+                            | TokenType::If
+                            | TokenType::While
+                            | TokenType::For
+                            | TokenType::Return
                     ) {
                         break;
                     }
@@ -525,11 +544,13 @@ impl Parser {
                 self.expect(&TokenType::RightParen)?;
                 e
             }
-            _ => return Err(anyhow!(
-                "Unexpected token in expression: {:?} at line {}",
-                self.current_token().token_type,
-                self.current_token().line
-            )),
+            _ => {
+                return Err(anyhow!(
+                    "Unexpected token in expression: {:?} at line {}",
+                    self.current_token().token_type,
+                    self.current_token().line
+                ))
+            }
         };
 
         // Check for array indexing with 'at'

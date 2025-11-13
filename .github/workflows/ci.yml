@@ -222,10 +222,54 @@ jobs:
       run: cargo audit
       continue-on-error: true
 
+  # Automatically update version in Cargo.toml based on tag
+  update-version:
+    name: Update Version from Tag
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    outputs:
+      version: ${{ steps.extract-version.outputs.version }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract version from tag
+      id: extract-version
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        # Remove 'v' prefix if present (e.g., v0.2.0 -> 0.2.0)
+        VERSION=${TAG_NAME#v}
+        echo "Tag: $TAG_NAME"
+        echo "Version: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Update Cargo.toml version
+      run: |
+        VERSION="${{ steps.extract-version.outputs.version }}"
+        echo "Updating Cargo.toml to version $VERSION"
+        sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
+        cat Cargo.toml | grep "^version"
+
+    - name: Commit version update
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add Cargo.toml
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "chore: update version to ${{ steps.extract-version.outputs.version }} [skip ci]"
+          git push origin HEAD:main || echo "Failed to push, continuing anyway"
+        fi
+
   # Build artifacts for release
   build-artifacts:
     name: Build Release Artifacts
     runs-on: ${{ matrix.os }}
+    needs: update-version
     if: startsWith(github.ref, 'refs/tags/')
     strategy:
       matrix:
@@ -246,6 +290,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        ref: main
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable

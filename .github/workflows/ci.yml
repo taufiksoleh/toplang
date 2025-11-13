@@ -360,14 +360,14 @@ jobs:
     - name: Display created archives
       run: ls -lh *.tar.gz *.zip
 
-    - name: Create Release and Upload Assets
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          topc-linux-x64.tar.gz
-          topc-windows-x64.zip
+    - name: Create Release with Assets
+      run: |
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        gh release create "$TAG_NAME" \
+          --title "Release $TAG_NAME" \
+          --generate-notes \
+          topc-linux-x64.tar.gz \
+          topc-windows-x64.zip \
           topc-macos-x64.tar.gz
-        draft: false
-        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

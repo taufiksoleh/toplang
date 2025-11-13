@@ -1,15 +1,20 @@
 mod ast;
+mod bytecode;
+mod compiler;
 mod interpreter;
 mod lexer;
 mod parser;
 mod token;
+mod vm;
 
 use anyhow::{Context, Result};
 use clap::Parser as ClapParser;
 use colored::Colorize;
+use compiler::Compiler;
 use interpreter::Interpreter;
 use lexer::Lexer;
 use parser::Parser;
+use vm::VM;
 use std::fs;
 use std::path::PathBuf;
 use std::process;
@@ -35,6 +40,18 @@ struct Cli {
     /// Enable verbose output
     #[arg(short, long)]
     verbose: bool,
+
+    /// Use bytecode compiler and VM (faster execution)
+    #[arg(short = 'b', long)]
+    bytecode: bool,
+
+    /// Show compiled bytecode (requires --bytecode)
+    #[arg(long)]
+    show_bytecode: bool,
+
+    /// Debug VM execution (requires --bytecode)
+    #[arg(long)]
+    debug_vm: bool,
 }
 
 fn main() {
@@ -85,16 +102,53 @@ fn run(cli: Cli) -> Result<()> {
         println!();
     }
 
-    // Interpretation
-    if cli.verbose {
-        println!("{}", "Executing...".blue().bold());
-        println!();
-    }
+    // Execution: Choose between interpreter or VM
+    let exit_code = if cli.bytecode {
+        // Bytecode compilation
+        if cli.verbose {
+            println!("{}", "Compiling to bytecode...".blue().bold());
+        }
 
-    let mut interpreter = Interpreter::new();
-    let exit_code = interpreter
-        .interpret(program)
-        .with_context(|| "Runtime error")?;
+        let mut compiler = Compiler::new();
+        let chunk = compiler
+            .compile(program)
+            .with_context(|| "Failed to compile to bytecode")?;
+
+        if cli.show_bytecode {
+            println!("\n{}", "=== Bytecode ===".yellow().bold());
+            chunk.disassemble("main");
+            for (name, func_chunk) in &chunk.functions {
+                println!();
+                func_chunk.disassemble(name);
+            }
+            println!();
+        }
+
+        // Execute with VM
+        if cli.verbose {
+            println!("{}", "Executing with VM...".blue().bold());
+            println!();
+        }
+
+        let mut vm = VM::new();
+        if cli.debug_vm {
+            vm.set_debug(true);
+        }
+
+        vm.execute(chunk)
+            .with_context(|| "VM runtime error")?
+    } else {
+        // Use traditional tree-walking interpreter
+        if cli.verbose {
+            println!("{}", "Executing with interpreter...".blue().bold());
+            println!();
+        }
+
+        let mut interpreter = Interpreter::new();
+        interpreter
+            .interpret(program)
+            .with_context(|| "Runtime error")?
+    };
 
     if cli.verbose {
         println!(

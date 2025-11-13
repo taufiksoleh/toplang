@@ -117,6 +117,14 @@ impl Parser {
             TokenType::While => self.parse_while(),
             TokenType::For => self.parse_for(),
             TokenType::Return => self.parse_return(),
+            TokenType::Break => {
+                self.advance();
+                Ok(Stmt::Break)
+            }
+            TokenType::Continue => {
+                self.advance();
+                Ok(Stmt::Continue)
+            }
             TokenType::Identifier(_) => self.parse_assignment_or_expr(),
             _ => Err(anyhow!(
                 "Unexpected token: {:?} at line {}",
@@ -340,12 +348,30 @@ impl Parser {
     fn parse_equality(&mut self) -> Result<Expr> {
         let mut left = self.parse_comparison()?;
 
-        while matches!(self.current_token().token_type, TokenType::Equals) {
-            self.advance();
+        loop {
+            let op = match &self.current_token().token_type {
+                TokenType::Equals => BinaryOp::Equals,
+                TokenType::Not => {
+                    // Check if this is "not equals"
+                    if matches!(self.peek_token(1).map(|t| &t.token_type), Some(TokenType::Equals)) {
+                        self.advance(); // Skip "not"
+                        self.advance(); // Skip "equals"
+                        BinaryOp::NotEquals
+                    } else {
+                        break;
+                    }
+                }
+                _ => break,
+            };
+
+            if op == BinaryOp::Equals {
+                self.advance();
+            }
+
             let right = self.parse_comparison()?;
             left = Expr::Binary {
                 left: Box::new(left),
-                op: BinaryOp::Equals,
+                op,
                 right: Box::new(right),
             };
         }
@@ -366,9 +392,24 @@ impl Parser {
                     {
                         if s == "than" {
                             self.advance();
+                            // Check for "or equals" after "greater than"
+                            if matches!(self.current_token().token_type, TokenType::Or) {
+                                if matches!(self.peek_token(1).map(|t| &t.token_type), Some(TokenType::Equals)) {
+                                    self.advance(); // Skip "or"
+                                    self.advance(); // Skip "equals"
+                                    BinaryOp::GreaterOrEquals
+                                } else {
+                                    BinaryOp::Greater
+                                }
+                            } else {
+                                BinaryOp::Greater
+                            }
+                        } else {
+                            BinaryOp::Greater
                         }
+                    } else {
+                        BinaryOp::Greater
                     }
-                    BinaryOp::Greater
                 }
                 TokenType::Less => {
                     self.advance();
@@ -378,9 +419,24 @@ impl Parser {
                     {
                         if s == "than" {
                             self.advance();
+                            // Check for "or equals" after "less than"
+                            if matches!(self.current_token().token_type, TokenType::Or) {
+                                if matches!(self.peek_token(1).map(|t| &t.token_type), Some(TokenType::Equals)) {
+                                    self.advance(); // Skip "or"
+                                    self.advance(); // Skip "equals"
+                                    BinaryOp::LessOrEquals
+                                } else {
+                                    BinaryOp::Less
+                                }
+                            } else {
+                                BinaryOp::Less
+                            }
+                        } else {
+                            BinaryOp::Less
                         }
+                    } else {
+                        BinaryOp::Less
                     }
-                    BinaryOp::Less
                 }
                 _ => break,
             };
@@ -425,6 +481,7 @@ impl Parser {
             let op = match &self.current_token().token_type {
                 TokenType::Multiply => BinaryOp::Multiply,
                 TokenType::Divide => BinaryOp::Divide,
+                TokenType::Modulo => BinaryOp::Modulo,
                 _ => break,
             };
 
@@ -456,6 +513,37 @@ impl Parser {
                 Ok(Expr::Unary {
                     op: UnaryOp::Negate,
                     operand: Box::new(operand),
+                })
+            }
+            TokenType::Length => {
+                self.advance();
+                // Expect "of"
+                self.expect(&TokenType::Of)?;
+                let operand = self.parse_unary()?;
+                Ok(Expr::Unary {
+                    op: UnaryOp::Length,
+                    operand: Box::new(operand),
+                })
+            }
+            TokenType::Uppercase => {
+                self.advance();
+                let operand = self.parse_unary()?;
+                Ok(Expr::Unary {
+                    op: UnaryOp::Uppercase,
+                    operand: Box::new(operand),
+                })
+            }
+            TokenType::Substring => {
+                self.advance();
+                let string = self.parse_primary()?;
+                self.expect(&TokenType::From)?;
+                let from = self.parse_primary()?;
+                self.expect(&TokenType::To)?;
+                let to = self.parse_primary()?;
+                Ok(Expr::Substring {
+                    string: Box::new(string),
+                    from: Box::new(from),
+                    to: Box::new(to),
                 })
             }
             _ => self.parse_primary(),

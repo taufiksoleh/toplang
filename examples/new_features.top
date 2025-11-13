@@ -1,0 +1,76 @@
+# New Features Example
+
+function main() {
+    print "=== New Features in TopLang ==="
+    print ""
+
+    print "=== 1. Comparison Operators ==="
+    var a is 5
+    var b is 10
+
+    if a not equals b {
+        print "not equals: 5 not equals 10"
+    }
+
+    if b greater than or equals 5 {
+        print "greater than or equals: 10 >= 5"
+    }
+
+    if a less than or equals 10 {
+        print "less than or equals: 5 <= 10"
+    }
+
+    print ""
+    print "=== 2. Modulo Operator ==="
+    var result1 is 10 modulo by 3
+    print "10 modulo by 3:"
+    print result1
+
+    var result2 is 17 mod by 5
+    print "17 mod by 5:"
+    print result2
+
+    print ""
+    print "=== 3. Loop Control (break/continue) ==="
+    print "Counting 0-4 with break:"
+    var x is 0
+    while true {
+        if x equals 5 {
+            break
+        }
+        print x
+        x is x plus 1
+    }
+
+    print "Skipping 2 and 5 with continue:"
+    var y is 0
+    while y less than 8 {
+        y is y plus 1
+        if y equals 2 {
+            continue
+        }
+        if y equals 5 {
+            continue
+        }
+        print y
+    }
+
+    print ""
+    print "=== 4. String Operations ==="
+    var str is "hello"
+
+    var len is length of str
+    print "length of hello:"
+    print len
+
+    var upper is uppercase "world"
+    print "uppercase world:"
+    print upper
+
+    var part is substring "toplang" from 0 to 3
+    print "substring toplang from 0 to 3:"
+    print part
+
+    print ""
+    print "=== All features demonstrated! ==="
+}

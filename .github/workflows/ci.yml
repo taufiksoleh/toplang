@@ -297,6 +297,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Update Cargo.toml version
+      shell: bash
+      run: |
+        VERSION="${{ needs.update-version.outputs.version }}"
+        echo "Updating Cargo.toml to version $VERSION"
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
+        else
+          sed -i "" "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml 2>/dev/null || \
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
+        fi
+        grep "^version" Cargo.toml
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
@@ -347,21 +360,14 @@ jobs:
     - name: Display created archives
       run: ls -lh *.tar.gz *.zip
 
-    - name: Create Draft Release and Upload Assets
+    - name: Create Release and Upload Assets
       uses: softprops/action-gh-release@v1
       with:
         files: |
           topc-linux-x64.tar.gz
           topc-windows-x64.zip
           topc-macos-x64.tar.gz
-        draft: true
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Publish Release
-      uses: softprops/action-gh-release@v1
-      with:
         draft: false
+        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

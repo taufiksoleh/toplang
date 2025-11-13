@@ -256,7 +256,10 @@ impl Lexer {
                                 }
                             }
                         }
-                    } else if identifier == "modulo" || identifier == "mod" || identifier == "remainder" {
+                    } else if identifier == "modulo"
+                        || identifier == "mod"
+                        || identifier == "remainder"
+                    {
                         // For modulo/mod/remainder, optionally consume "by" if present
                         let saved_pos = self.position;
                         let saved_line = self.line;
@@ -275,11 +278,7 @@ impl Lexer {
                                 // If it was "by", we consumed it and continue
                             }
                         }
-                        tokens.push(Token::new(
-                            TokenType::Modulo,
-                            start_line,
-                            start_column,
-                        ));
+                        tokens.push(Token::new(TokenType::Modulo, start_line, start_column));
                         continue;
                     }
 

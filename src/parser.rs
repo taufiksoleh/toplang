@@ -353,7 +353,10 @@ impl Parser {
                 TokenType::Equals => BinaryOp::Equals,
                 TokenType::Not => {
                     // Check if this is "not equals"
-                    if matches!(self.peek_token(1).map(|t| &t.token_type), Some(TokenType::Equals)) {
+                    if matches!(
+                        self.peek_token(1).map(|t| &t.token_type),
+                        Some(TokenType::Equals)
+                    ) {
                         self.advance(); // Skip "not"
                         self.advance(); // Skip "equals"
                         BinaryOp::NotEquals
@@ -394,7 +397,10 @@ impl Parser {
                             self.advance();
                             // Check for "or equals" after "greater than"
                             if matches!(self.current_token().token_type, TokenType::Or) {
-                                if matches!(self.peek_token(1).map(|t| &t.token_type), Some(TokenType::Equals)) {
+                                if matches!(
+                                    self.peek_token(1).map(|t| &t.token_type),
+                                    Some(TokenType::Equals)
+                                ) {
                                     self.advance(); // Skip "or"
                                     self.advance(); // Skip "equals"
                                     BinaryOp::GreaterOrEquals
@@ -421,7 +427,10 @@ impl Parser {
                             self.advance();
                             // Check for "or equals" after "less than"
                             if matches!(self.current_token().token_type, TokenType::Or) {
-                                if matches!(self.peek_token(1).map(|t| &t.token_type), Some(TokenType::Equals)) {
+                                if matches!(
+                                    self.peek_token(1).map(|t| &t.token_type),
+                                    Some(TokenType::Equals)
+                                ) {
                                     self.advance(); // Skip "or"
                                     self.advance(); // Skip "equals"
                                     BinaryOp::LessOrEquals

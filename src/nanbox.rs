@@ -11,8 +11,7 @@
 ///   - True:  0x7FF8_0000_0000_0002
 ///   - Pointer: 0x7FF8_xxxx_xxxx_xxxx (48-bit pointer in lower bits)
 
-use std::alloc::{alloc, dealloc, Layout};
-use std::ptr;
+use anyhow::{anyhow, Result};
 
 // NaN mask: exponent all 1s, mantissa non-zero
 const QNAN: u64 = 0x7FF8_0000_0000_0000;
@@ -28,24 +27,38 @@ const TAG_ARRAY: u64 = QNAN | 4;
 const POINTER_MASK: u64 = 0x0000_FFFF_FFFF_FFFF;
 
 /// A NaN-boxed value - all types fit in 64 bits
-#[derive(Copy, Clone)]
+/// Note: We implement Clone manually to handle heap-allocated data properly
 pub struct Value(u64);
+
+impl Clone for Value {
+    fn clone(&self) -> Self {
+        // For NaN-boxed values with pointers, we just copy the bits
+        // This means multiple Values can point to the same heap data
+        // We rely on the VM to manage lifetimes properly
+        Value(self.0)
+    }
+}
+
+impl Copy for Value {}
 
 impl Value {
     // ===== Constructors =====
 
     #[inline]
-    pub fn number(n: f64) -> Self {
+    pub fn Number(n: f64) -> Self {
         Value(n.to_bits())
     }
 
     #[inline]
-    pub fn null() -> Self {
+    pub fn Null() -> Self {
         Value(TAG_NULL)
     }
 
+    // Constant for stack initialization
+    pub const NULL_VALUE: Value = Value(TAG_NULL);
+
     #[inline]
-    pub fn boolean(b: bool) -> Self {
+    pub fn Boolean(b: bool) -> Self {
         if b {
             Value(TAG_TRUE)
         } else {
@@ -54,15 +67,41 @@ impl Value {
     }
 
     #[inline]
-    pub fn string(s: String) -> Self {
+    pub fn String(s: String) -> Self {
         let ptr = Box::into_raw(Box::new(s)) as u64;
         Value(TAG_STRING | (ptr & POINTER_MASK))
     }
 
     #[inline]
-    pub fn array(arr: Vec<Value>) -> Self {
+    pub fn Array(arr: Vec<Value>) -> Self {
         let ptr = Box::into_raw(Box::new(arr)) as u64;
         Value(TAG_ARRAY | (ptr & POINTER_MASK))
+    }
+
+    // Lowercase aliases for compatibility
+    #[inline]
+    pub fn number(n: f64) -> Self {
+        Self::Number(n)
+    }
+
+    #[inline]
+    pub fn null() -> Self {
+        Self::Null()
+    }
+
+    #[inline]
+    pub fn boolean(b: bool) -> Self {
+        Self::Boolean(b)
+    }
+
+    #[inline]
+    pub fn string(s: String) -> Self {
+        Self::String(s)
+    }
+
+    #[inline]
+    pub fn array(arr: Vec<Value>) -> Self {
+        Self::Array(arr)
     }
 
     // ===== Type checks =====
@@ -93,65 +132,65 @@ impl Value {
         (self.0 & !POINTER_MASK) == TAG_ARRAY
     }
 
-    // ===== Extractors =====
+    // ===== Extractors (with error handling for VM compatibility) =====
 
     #[inline]
-    pub fn as_number(&self) -> Option<f64> {
+    pub fn as_number(&self) -> Result<f64> {
         if self.is_number() {
-            Some(f64::from_bits(self.0))
+            Ok(f64::from_bits(self.0))
         } else {
-            None
+            Err(anyhow!("Expected number, got {:?}", self))
         }
     }
 
     #[inline]
-    pub fn as_boolean(&self) -> Option<bool> {
+    pub fn as_boolean(&self) -> Result<bool> {
         if self.0 == TAG_TRUE {
-            Some(true)
+            Ok(true)
         } else if self.0 == TAG_FALSE {
-            Some(false)
+            Ok(false)
         } else {
-            None
+            Err(anyhow!("Expected boolean, got {:?}", self))
         }
     }
 
     #[inline]
-    pub fn as_string(&self) -> Option<&String> {
+    pub fn as_string(&self) -> Result<String> {
         if self.is_string() {
             let ptr = (self.0 & POINTER_MASK) as *const String;
-            Some(unsafe { &*ptr })
+            Ok(unsafe { (*ptr).clone() })
         } else {
-            None
+            Err(anyhow!("Expected string, got {:?}", self))
         }
     }
 
     #[inline]
-    pub fn as_string_mut(&mut self) -> Option<&mut String> {
+    pub fn as_string_ref(&self) -> Result<&String> {
         if self.is_string() {
-            let ptr = (self.0 & POINTER_MASK) as *mut String;
-            Some(unsafe { &mut *ptr })
+            let ptr = (self.0 & POINTER_MASK) as *const String;
+            Ok(unsafe { &*ptr })
         } else {
-            None
+            Err(anyhow!("Expected string, got {:?}", self))
         }
     }
 
     #[inline]
-    pub fn as_array(&self) -> Option<&Vec<Value>> {
+    pub fn as_array(&self) -> Result<Vec<Value>> {
         if self.is_array() {
             let ptr = (self.0 & POINTER_MASK) as *const Vec<Value>;
-            Some(unsafe { &*ptr })
+            Ok(unsafe { (*ptr).clone() })
         } else {
-            None
+            Err(anyhow!("Expected array, got {:?}", self))
         }
     }
 
     #[inline]
-    pub fn as_array_mut(&mut self) -> Option<&mut Vec<Value>> {
+    pub fn as_array_ref(&self) -> Result<&Vec<Value>> {
         if self.is_array() {
-            let ptr = (self.0 & POINTER_MASK) as *mut Vec<Value>;
-            Some(unsafe { &mut *ptr })
+            let ptr = (self.0 & POINTER_MASK) as *const Vec<Value>;
+            Ok(unsafe { &*ptr })
         } else {
-            None
+            Err(anyhow!("Expected array, got {:?}", self))
         }
     }
 
@@ -187,14 +226,20 @@ impl Value {
             let b = f64::from_bits(other.0);
             (a - b).abs() < f64::EPSILON
         } else if self.is_string() && other.is_string() {
-            self.as_string().unwrap() == other.as_string().unwrap()
-        } else if self.is_array() && other.is_array() {
-            let a = self.as_array().unwrap();
-            let b = other.as_array().unwrap();
-            if a.len() != b.len() {
-                return false;
+            if let (Ok(a), Ok(b)) = (self.as_string_ref(), other.as_string_ref()) {
+                a == b
+            } else {
+                false
             }
-            a.iter().zip(b.iter()).all(|(x, y)| x.equals(y))
+        } else if self.is_array() && other.is_array() {
+            if let (Ok(a), Ok(b)) = (self.as_array_ref(), other.as_array_ref()) {
+                if a.len() != b.len() {
+                    return false;
+                }
+                a.iter().zip(b.iter()).all(|(x, y)| x.equals(y))
+            } else {
+                false
+            }
         } else {
             false
         }
@@ -205,11 +250,11 @@ impl Value {
     /// Clone the value (deep copy for heap-allocated types)
     pub fn deep_clone(&self) -> Value {
         if self.is_string() {
-            Value::string(self.as_string().unwrap().clone())
+            Value::String(self.as_string().unwrap_or_default())
         } else if self.is_array() {
-            let arr = self.as_array().unwrap();
+            let arr = self.as_array().unwrap_or_default();
             let cloned: Vec<Value> = arr.iter().map(|v| v.deep_clone()).collect();
-            Value::array(cloned)
+            Value::Array(cloned)
         } else {
             // Numbers, booleans, null are just copied
             *self
@@ -236,17 +281,17 @@ impl std::fmt::Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if self.is_null() {
             write!(f, "null")
-        } else if let Some(b) = self.as_boolean() {
+        } else if let Ok(b) = self.as_boolean() {
             write!(f, "{}", b)
-        } else if let Some(n) = self.as_number() {
+        } else if let Ok(n) = self.as_number() {
             if n.fract() == 0.0 && n.is_finite() {
                 write!(f, "{}", n as i64)
             } else {
                 write!(f, "{}", n)
             }
-        } else if let Some(s) = self.as_string() {
+        } else if let Ok(s) = self.as_string_ref() {
             write!(f, "{}", s)
-        } else if let Some(arr) = self.as_array() {
+        } else if let Ok(arr) = self.as_array_ref() {
             write!(f, "[")?;
             for (i, val) in arr.iter().enumerate() {
                 if i > 0 {
@@ -265,13 +310,13 @@ impl std::fmt::Debug for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if self.is_null() {
             write!(f, "Null")
-        } else if let Some(b) = self.as_boolean() {
+        } else if let Ok(b) = self.as_boolean() {
             write!(f, "Boolean({})", b)
-        } else if let Some(n) = self.as_number() {
+        } else if let Ok(n) = self.as_number() {
             write!(f, "Number({})", n)
-        } else if let Some(s) = self.as_string() {
+        } else if let Ok(s) = self.as_string_ref() {
             write!(f, "String({:?})", s)
-        } else if let Some(arr) = self.as_array() {
+        } else if let Ok(arr) = self.as_array_ref() {
             write!(f, "Array({:?})", arr)
         } else {
             write!(f, "Unknown(0x{:016x})", self.0)

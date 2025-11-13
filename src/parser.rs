@@ -164,7 +164,7 @@ impl Parser {
             // It's a function call
             self.current -= 1; // Go back
             let expr = self.parse_expression()?;
-            Ok(Stmt::ExprStmt(expr))
+            Ok(Stmt::Expression(expr))
         }
     }
 
@@ -314,7 +314,9 @@ impl Parser {
                 TokenType::Greater => {
                     self.advance();
                     // Check for "greater than"
-                    if let Some(TokenType::Identifier(ref s)) = self.peek_token(0).map(|t| &t.token_type) {
+                    if let Some(TokenType::Identifier(ref s)) =
+                        self.peek_token(0).map(|t| &t.token_type)
+                    {
                         if s == "than" {
                             self.advance();
                         }
@@ -324,7 +326,9 @@ impl Parser {
                 TokenType::Less => {
                     self.advance();
                     // Check for "less than"
-                    if let Some(TokenType::Identifier(ref s)) = self.peek_token(0).map(|t| &t.token_type) {
+                    if let Some(TokenType::Identifier(ref s)) =
+                        self.peek_token(0).map(|t| &t.token_type)
+                    {
                         if s == "than" {
                             self.advance();
                         }

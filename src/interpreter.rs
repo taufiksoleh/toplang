@@ -1,6 +1,7 @@
 use crate::ast::*;
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -19,19 +20,21 @@ impl Value {
             Value::Null => false,
         }
     }
+}
 
-    pub fn to_string(&self) -> String {
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Value::Number(n) => {
                 if n.fract() == 0.0 {
-                    format!("{}", *n as i64)
+                    write!(f, "{}", *n as i64)
                 } else {
-                    format!("{}", n)
+                    write!(f, "{}", n)
                 }
             }
-            Value::String(s) => s.clone(),
-            Value::Boolean(b) => format!("{}", b),
-            Value::Null => "null".to_string(),
+            Value::String(s) => write!(f, "{}", s),
+            Value::Boolean(b) => write!(f, "{}", b),
+            Value::Null => write!(f, "null"),
         }
     }
 }
@@ -125,7 +128,7 @@ impl Interpreter {
             }
             Stmt::Print(expr) => {
                 let val = self.eval_expr(expr)?;
-                println!("{}", val.to_string());
+                println!("{}", val);
                 Ok(())
             }
             Stmt::If {
@@ -201,7 +204,7 @@ impl Interpreter {
                 self.return_value = Some(val);
                 Ok(())
             }
-            Stmt::ExprStmt(expr) => {
+            Stmt::Expression(expr) => {
                 self.eval_expr(expr)?;
                 Ok(())
             }

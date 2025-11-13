@@ -255,24 +255,19 @@ impl Interpreter {
                     }
                 }
                 BinaryOp::Equals => Ok(Value::Boolean((l - r).abs() < f64::EPSILON)),
-                BinaryOp::NotEquals => Ok(Value::Boolean((l - r).abs() >= f64::EPSILON)),
                 BinaryOp::Greater => Ok(Value::Boolean(l > r)),
                 BinaryOp::Less => Ok(Value::Boolean(l < r)),
-                BinaryOp::GreaterEquals => Ok(Value::Boolean(l >= r)),
-                BinaryOp::LessEquals => Ok(Value::Boolean(l <= r)),
                 _ => Err(anyhow!("Invalid operation for numbers")),
             },
             (Value::String(l), Value::String(r)) => match op {
                 BinaryOp::Add => Ok(Value::String(format!("{}{}", l, r))),
                 BinaryOp::Equals => Ok(Value::Boolean(l == r)),
-                BinaryOp::NotEquals => Ok(Value::Boolean(l != r)),
                 _ => Err(anyhow!("Invalid operation for strings")),
             },
             (Value::Boolean(l), Value::Boolean(r)) => match op {
                 BinaryOp::And => Ok(Value::Boolean(*l && *r)),
                 BinaryOp::Or => Ok(Value::Boolean(*l || *r)),
                 BinaryOp::Equals => Ok(Value::Boolean(l == r)),
-                BinaryOp::NotEquals => Ok(Value::Boolean(l != r)),
                 _ => Err(anyhow!("Invalid operation for booleans")),
             },
             // String concatenation with numbers

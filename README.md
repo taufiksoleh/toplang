@@ -289,7 +289,7 @@ TopLang uses a modern interpreter architecture:
 This architecture ensures:
 - Fast compilation times
 - Cross-platform compatibility
-- No external dependencies (like LLVM)
+- No external dependencies
 - Easy debugging and error messages
 
 ## Why Rust?
@@ -297,7 +297,7 @@ This architecture ensures:
 The compiler is written in Rust for several reasons:
 - **Memory Safety** - No segfaults or memory leaks
 - **Cross-Platform** - Single codebase works everywhere
-- **Performance** - Near C/C++ performance
+- **Performance** - Fast, native performance
 - **Modern Tooling** - Cargo makes building and testing easy
 - **No Runtime Dependencies** - Static linking produces standalone executables
 

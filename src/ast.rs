@@ -7,11 +7,8 @@ pub enum BinaryOp {
     Multiply,
     Divide,
     Equals,
-    NotEquals,
     Greater,
     Less,
-    GreaterEquals,
-    LessEquals,
     And,
     Or,
 }
@@ -94,11 +91,8 @@ impl fmt::Display for BinaryOp {
             BinaryOp::Multiply => write!(f, "*"),
             BinaryOp::Divide => write!(f, "/"),
             BinaryOp::Equals => write!(f, "=="),
-            BinaryOp::NotEquals => write!(f, "!="),
             BinaryOp::Greater => write!(f, ">"),
             BinaryOp::Less => write!(f, "<"),
-            BinaryOp::GreaterEquals => write!(f, ">="),
-            BinaryOp::LessEquals => write!(f, "<="),
             BinaryOp::And => write!(f, "&&"),
             BinaryOp::Or => write!(f, "||"),
         }

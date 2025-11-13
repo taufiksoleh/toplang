@@ -287,18 +287,12 @@ impl Parser {
     fn parse_equality(&mut self) -> Result<Expr> {
         let mut left = self.parse_comparison()?;
 
-        loop {
-            let op = match &self.current_token().token_type {
-                TokenType::Equals => BinaryOp::Equals,
-                TokenType::NotEquals => BinaryOp::NotEquals,
-                _ => break,
-            };
-
+        while matches!(self.current_token().token_type, TokenType::Equals) {
             self.advance();
             let right = self.parse_comparison()?;
             left = Expr::Binary {
                 left: Box::new(left),
-                op,
+                op: BinaryOp::Equals,
                 right: Box::new(right),
             };
         }
@@ -335,14 +329,8 @@ impl Parser {
                     }
                     BinaryOp::Less
                 }
-                TokenType::GreaterEquals => BinaryOp::GreaterEquals,
-                TokenType::LessEquals => BinaryOp::LessEquals,
                 _ => break,
             };
-
-            if !matches!(op, BinaryOp::Greater | BinaryOp::Less) {
-                self.advance();
-            }
 
             let right = self.parse_term()?;
             left = Expr::Binary {

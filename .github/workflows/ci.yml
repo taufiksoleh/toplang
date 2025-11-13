@@ -233,20 +233,31 @@ jobs:
 
         # Check if release already exists
         if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-          echo "Release $TAG_NAME already exists. Uploading assets to existing release..."
-          gh release upload "$TAG_NAME" \
-            topc-linux-x64.tar.gz \
-            topc-windows-x64.zip \
-            topc-macos-x64.tar.gz \
-            --clobber
-        else
-          echo "Creating new release $TAG_NAME..."
-          gh release create "$TAG_NAME" \
-            --title "Release $TAG_NAME" \
-            --generate-notes \
-            topc-linux-x64.tar.gz \
-            topc-windows-x64.zip \
-            topc-macos-x64.tar.gz
+          echo "Release $TAG_NAME already exists."
+
+          # Delete the existing release to recreate it with assets
+          echo "Deleting existing release to recreate with assets..."
+          gh release delete "$TAG_NAME" --yes
         fi
+
+        # Create release as draft first (mutable state)
+        echo "Creating draft release $TAG_NAME..."
+        gh release create "$TAG_NAME" \
+          --draft \
+          --title "Release $TAG_NAME" \
+          --generate-notes
+
+        # Upload assets while release is still in draft (mutable)
+        echo "Uploading assets to draft release..."
+        gh release upload "$TAG_NAME" \
+          topc-linux-x64.tar.gz \
+          topc-windows-x64.zip \
+          topc-macos-x64.tar.gz
+
+        # Publish the release (makes it immutable)
+        echo "Publishing release..."
+        gh release edit "$TAG_NAME" --draft=false
+
+        echo "Release $TAG_NAME published successfully!"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

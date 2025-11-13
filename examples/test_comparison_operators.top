@@ -1,0 +1,53 @@
+# Test: Comparison Operators
+
+function main() {
+    print "Testing Comparison Operators"
+    print ""
+
+    var a is 5
+    var b is 10
+    var c is 5
+
+    # Test not equals
+    print "Test: not equals"
+    if a not equals b {
+        print "PASS: 5 not equals 10"
+    }
+
+    if a equals c {
+        print "PASS: 5 equals 5 (not different)"
+    }
+
+    # Test greater than or equals
+    print ""
+    print "Test: greater than or equals"
+    if b greater than or equals a {
+        print "PASS: 10 >= 5"
+    }
+
+    if a greater than or equals c {
+        print "PASS: 5 >= 5 (equal case)"
+    }
+
+    if a greater than or equals b {
+        print "FAIL: 5 >= 10 should be false"
+    }
+
+    # Test less than or equals
+    print ""
+    print "Test: less than or equals"
+    if a less than or equals b {
+        print "PASS: 5 <= 10"
+    }
+
+    if a less than or equals c {
+        print "PASS: 5 <= 5 (equal case)"
+    }
+
+    if b less than or equals a {
+        print "FAIL: 10 <= 5 should be false"
+    }
+
+    print ""
+    print "All comparison operator tests completed"
+}

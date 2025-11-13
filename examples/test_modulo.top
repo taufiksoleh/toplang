@@ -1,0 +1,70 @@
+# Test: Modulo Operator
+
+function main() {
+    print "Testing Modulo Operator"
+    print ""
+
+    # Test modulo by
+    print "Test: modulo by"
+    var result1 is 10 modulo by 3
+    print "10 modulo by 3 = 1"
+    print "Result:"
+    print result1
+
+    if result1 equals 1 {
+        print "PASS"
+    }
+
+    # Test mod by (alias)
+    print ""
+    print "Test: mod by"
+    var result2 is 17 mod by 5
+    print "17 mod by 5 = 2"
+    print "Result:"
+    print result2
+
+    if result2 equals 2 {
+        print "PASS"
+    }
+
+    # Test remainder by (alias)
+    print ""
+    print "Test: remainder by"
+    var result3 is 20 remainder by 7
+    print "20 remainder by 7 = 6"
+    print "Result:"
+    print result3
+
+    if result3 equals 6 {
+        print "PASS"
+    }
+
+    # Test with variables
+    print ""
+    print "Test: modulo with variables"
+    var x is 15
+    var y is 4
+    var result4 is x modulo by y
+    print "15 modulo by 4 = 3"
+    print "Result:"
+    print result4
+
+    if result4 equals 3 {
+        print "PASS"
+    }
+
+    # Test edge case: perfect division
+    print ""
+    print "Test: perfect division"
+    var result5 is 12 modulo by 4
+    print "12 modulo by 4 = 0"
+    print "Result:"
+    print result5
+
+    if result5 equals 0 {
+        print "PASS"
+    }
+
+    print ""
+    print "All modulo operator tests completed"
+}

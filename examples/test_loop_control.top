@@ -1,0 +1,69 @@
+# Test: Loop Control Statements (break and continue)
+
+function main() {
+    print "Testing Loop Control Statements"
+    print ""
+
+    # Test break in while loop
+    print "Test: break in while loop"
+    print "Counting 0-4 and breaking at 5:"
+    var x is 0
+    while true {
+        if x equals 5 {
+            break
+        }
+        print x
+        x is x plus 1
+    }
+
+    if x equals 5 {
+        print "PASS: break stopped at 5"
+    }
+
+    # Test continue in while loop
+    print ""
+    print "Test: continue in while loop"
+    print "Counting 1-8 but skipping 2 and 5:"
+    var y is 0
+    while y less than 8 {
+        y is y plus 1
+        if y equals 2 {
+            continue
+        }
+        if y equals 5 {
+            continue
+        }
+        print y
+    }
+    print "PASS: continue skipped 2 and 5"
+
+    # Test multiple breaks
+    print ""
+    print "Test: multiple conditions with break"
+    var count is 0
+    while count less than 100 {
+        count is count plus 1
+        if count equals 7 {
+            print "Breaking at 7"
+            break
+        }
+    }
+    print "PASS: break with counter"
+
+    # Test continue with counter
+    print ""
+    print "Test: continue to skip even numbers"
+    var num is 0
+    while num less than 10 {
+        num is num plus 1
+        var rem is num modulo by 2
+        if rem equals 0 {
+            continue
+        }
+        print num
+    }
+    print "PASS: continue skipped even numbers"
+
+    print ""
+    print "All loop control tests completed"
+}

@@ -1,0 +1,139 @@
+# Test: String Operations
+
+function main() {
+    print "Testing String Operations"
+    print ""
+
+    # Test length of string
+    print "Test: length of"
+    var str1 is "hello"
+    var len1 is length of str1
+    print "length of \"hello\" should be 5"
+    print "Result:"
+    print len1
+
+    if len1 equals 5 {
+        print "PASS"
+    }
+
+    # Test length of empty string
+    print ""
+    print "Test: length of empty string"
+    var empty is ""
+    var len2 is length of empty
+    print "length of \"\" should be 0"
+    print "Result:"
+    print len2
+
+    if len2 equals 0 {
+        print "PASS"
+    }
+
+    # Test length of longer string
+    print ""
+    print "Test: length of longer string"
+    var str2 is "toplang"
+    var len3 is length of str2
+    print "length of \"toplang\" should be 7"
+    print "Result:"
+    print len3
+
+    if len3 equals 7 {
+        print "PASS"
+    }
+
+    # Test uppercase
+    print ""
+    print "Test: uppercase"
+    var lower is "world"
+    var upper is uppercase lower
+    print "uppercase \"world\" should be \"WORLD\""
+    print "Result:"
+    print upper
+
+    if upper equals "WORLD" {
+        print "PASS"
+    }
+
+    # Test uppercase with mixed case
+    print ""
+    print "Test: uppercase mixed case"
+    var mixed is "HeLLo"
+    var upper2 is uppercase mixed
+    print "uppercase \"HeLLo\" should be \"HELLO\""
+    print "Result:"
+    print upper2
+
+    if upper2 equals "HELLO" {
+        print "PASS"
+    }
+
+    # Test substring basic
+    print ""
+    print "Test: substring"
+    var str3 is "hello"
+    var sub1 is substring str3 from 1 to 4
+    print "substring \"hello\" from 1 to 4 should be \"ell\""
+    print "Result:"
+    print sub1
+
+    if sub1 equals "ell" {
+        print "PASS"
+    }
+
+    # Test substring from beginning
+    print ""
+    print "Test: substring from beginning"
+    var str4 is "toplang"
+    var sub2 is substring str4 from 0 to 3
+    print "substring \"toplang\" from 0 to 3 should be \"top\""
+    print "Result:"
+    print sub2
+
+    if sub2 equals "top" {
+        print "PASS"
+    }
+
+    # Test substring to end
+    print ""
+    print "Test: substring to end"
+    var str5 is "programming"
+    var sub3 is substring str5 from 7 to 11
+    print "substring \"programming\" from 7 to 11 should be \"ming\""
+    print "Result:"
+    print sub3
+
+    if sub3 equals "ming" {
+        print "PASS"
+    }
+
+    # Test substring single character
+    print ""
+    print "Test: substring single character"
+    var str6 is "abc"
+    var sub4 is substring str6 from 1 to 2
+    print "substring \"abc\" from 1 to 2 should be \"b\""
+    print "Result:"
+    print sub4
+
+    if sub4 equals "b" {
+        print "PASS"
+    }
+
+    # Test combining operations
+    print ""
+    print "Test: combining operations"
+    var original is "test"
+    var up is uppercase original
+    var len4 is length of up
+    print "uppercase \"test\" then get length should be 4"
+    print "Result:"
+    print len4
+
+    if len4 equals 4 {
+        print "PASS"
+    }
+
+    print ""
+    print "All string operation tests completed"
+}

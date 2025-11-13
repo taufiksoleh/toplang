@@ -6,9 +6,13 @@ pub enum BinaryOp {
     Subtract,
     Multiply,
     Divide,
+    Modulo,
     Equals,
+    NotEquals,
     Greater,
+    GreaterOrEquals,
     Less,
+    LessOrEquals,
     And,
     Or,
 }
@@ -17,6 +21,8 @@ pub enum BinaryOp {
 pub enum UnaryOp {
     Not,
     Negate,
+    Length,
+    Uppercase,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -42,6 +48,11 @@ pub enum Expr {
     Index {
         array: Box<Expr>,
         index: Box<Expr>,
+    },
+    Substring {
+        string: Box<Expr>,
+        from: Box<Expr>,
+        to: Box<Expr>,
     },
 }
 
@@ -82,6 +93,8 @@ pub enum Stmt {
         body: Vec<Stmt>,
     },
     Return(Option<Expr>),
+    Break,
+    Continue,
     Expression(Expr),
 }
 
@@ -104,9 +117,13 @@ impl fmt::Display for BinaryOp {
             BinaryOp::Subtract => write!(f, "-"),
             BinaryOp::Multiply => write!(f, "*"),
             BinaryOp::Divide => write!(f, "/"),
+            BinaryOp::Modulo => write!(f, "%"),
             BinaryOp::Equals => write!(f, "=="),
+            BinaryOp::NotEquals => write!(f, "!="),
             BinaryOp::Greater => write!(f, ">"),
+            BinaryOp::GreaterOrEquals => write!(f, ">="),
             BinaryOp::Less => write!(f, "<"),
+            BinaryOp::LessOrEquals => write!(f, "<="),
             BinaryOp::And => write!(f, "&&"),
             BinaryOp::Or => write!(f, "||"),
         }
@@ -118,6 +135,8 @@ impl fmt::Display for UnaryOp {
         match self {
             UnaryOp::Not => write!(f, "!"),
             UnaryOp::Negate => write!(f, "-"),
+            UnaryOp::Length => write!(f, "length"),
+            UnaryOp::Uppercase => write!(f, "uppercase"),
         }
     }
 }

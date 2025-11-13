@@ -56,6 +56,8 @@ pub struct Interpreter {
     locals: Vec<HashMap<String, Value>>,
     functions: HashMap<String, Function>,
     return_value: Option<Value>,
+    break_flag: bool,
+    continue_flag: bool,
 }
 
 impl Interpreter {
@@ -65,6 +67,8 @@ impl Interpreter {
             locals: Vec::new(),
             functions: HashMap::new(),
             return_value: None,
+            break_flag: false,
+            continue_flag: false,
         }
     }
 
@@ -235,6 +239,20 @@ impl Interpreter {
                         if self.return_value.is_some() {
                             return Ok(());
                         }
+                        if self.break_flag {
+                            break;
+                        }
+                        if self.continue_flag {
+                            break;
+                        }
+                    }
+
+                    if self.break_flag {
+                        self.break_flag = false;
+                        break;
+                    }
+                    if self.continue_flag {
+                        self.continue_flag = false;
                     }
                 }
                 Ok(())
@@ -258,6 +276,20 @@ impl Interpreter {
                         if self.return_value.is_some() {
                             return Ok(());
                         }
+                        if self.break_flag {
+                            break;
+                        }
+                        if self.continue_flag {
+                            break;
+                        }
+                    }
+
+                    if self.break_flag {
+                        self.break_flag = false;
+                        break;
+                    }
+                    if self.continue_flag {
+                        self.continue_flag = false;
                     }
 
                     self.execute_stmt(increment)?;
@@ -271,6 +303,14 @@ impl Interpreter {
                     Value::Null
                 };
                 self.return_value = Some(val);
+                Ok(())
+            }
+            Stmt::Break => {
+                self.break_flag = true;
+                Ok(())
+            }
+            Stmt::Continue => {
+                self.continue_flag = true;
                 Ok(())
             }
             Stmt::Expression(expr) => {
@@ -331,6 +371,30 @@ impl Interpreter {
                     Err(anyhow!("Cannot index non-array value"))
                 }
             }
+            Expr::Substring { string, from, to } => {
+                let str_val = self.eval_expr(string)?;
+                let from_val = self.eval_expr(from)?;
+                let to_val = self.eval_expr(to)?;
+
+                if let Value::String(s) = str_val {
+                    if let (Value::Number(f), Value::Number(t)) = (from_val, to_val) {
+                        let from_idx = f as usize;
+                        let to_idx = t as usize;
+                        let chars: Vec<char> = s.chars().collect();
+
+                        if from_idx <= to_idx && to_idx <= chars.len() {
+                            let result: String = chars[from_idx..to_idx].iter().collect();
+                            Ok(Value::String(result))
+                        } else {
+                            Err(anyhow!("Substring indices out of bounds"))
+                        }
+                    } else {
+                        Err(anyhow!("Substring indices must be numbers"))
+                    }
+                } else {
+                    Err(anyhow!("Substring can only be applied to strings"))
+                }
+            }
         }
     }
 
@@ -347,20 +411,32 @@ impl Interpreter {
                         Ok(Value::Number(l / r))
                     }
                 }
+                BinaryOp::Modulo => {
+                    if *r == 0.0 {
+                        Err(anyhow!("Modulo by zero"))
+                    } else {
+                        Ok(Value::Number(l % r))
+                    }
+                }
                 BinaryOp::Equals => Ok(Value::Boolean((l - r).abs() < f64::EPSILON)),
+                BinaryOp::NotEquals => Ok(Value::Boolean((l - r).abs() >= f64::EPSILON)),
                 BinaryOp::Greater => Ok(Value::Boolean(l > r)),
+                BinaryOp::GreaterOrEquals => Ok(Value::Boolean(l >= r)),
                 BinaryOp::Less => Ok(Value::Boolean(l < r)),
+                BinaryOp::LessOrEquals => Ok(Value::Boolean(l <= r)),
                 _ => Err(anyhow!("Invalid operation for numbers")),
             },
             (Value::String(l), Value::String(r)) => match op {
                 BinaryOp::Add => Ok(Value::String(format!("{}{}", l, r))),
                 BinaryOp::Equals => Ok(Value::Boolean(l == r)),
+                BinaryOp::NotEquals => Ok(Value::Boolean(l != r)),
                 _ => Err(anyhow!("Invalid operation for strings")),
             },
             (Value::Boolean(l), Value::Boolean(r)) => match op {
                 BinaryOp::And => Ok(Value::Boolean(*l && *r)),
                 BinaryOp::Or => Ok(Value::Boolean(*l || *r)),
                 BinaryOp::Equals => Ok(Value::Boolean(l == r)),
+                BinaryOp::NotEquals => Ok(Value::Boolean(l != r)),
                 _ => Err(anyhow!("Invalid operation for booleans")),
             },
             // String concatenation with numbers
@@ -382,6 +458,15 @@ impl Interpreter {
             UnaryOp::Negate => match operand {
                 Value::Number(n) => Ok(Value::Number(-n)),
                 _ => Err(anyhow!("Cannot negate non-number")),
+            },
+            UnaryOp::Length => match operand {
+                Value::String(s) => Ok(Value::Number(s.len() as f64)),
+                Value::Array(arr) => Ok(Value::Number(arr.len() as f64)),
+                _ => Err(anyhow!("Cannot get length of non-string/non-array")),
+            },
+            UnaryOp::Uppercase => match operand {
+                Value::String(s) => Ok(Value::String(s.to_uppercase())),
+                _ => Err(anyhow!("Cannot uppercase non-string")),
             },
         }
     }

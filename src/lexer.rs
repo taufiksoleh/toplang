@@ -26,6 +26,14 @@ impl Lexer {
         keywords.insert("ask".to_string(), TokenType::Ask);
         keywords.insert("list".to_string(), TokenType::List);
         keywords.insert("at".to_string(), TokenType::At);
+        keywords.insert("break".to_string(), TokenType::Break);
+        keywords.insert("continue".to_string(), TokenType::Continue);
+        keywords.insert("length".to_string(), TokenType::Length);
+        keywords.insert("uppercase".to_string(), TokenType::Uppercase);
+        keywords.insert("substring".to_string(), TokenType::Substring);
+        keywords.insert("from".to_string(), TokenType::From);
+        keywords.insert("to".to_string(), TokenType::To);
+        keywords.insert("of".to_string(), TokenType::Of);
         keywords.insert("true".to_string(), TokenType::Boolean(true));
         keywords.insert("false".to_string(), TokenType::Boolean(false));
 
@@ -248,6 +256,30 @@ impl Lexer {
                                 }
                             }
                         }
+                    } else if identifier == "modulo"
+                        || identifier == "mod"
+                        || identifier == "remainder"
+                    {
+                        // For modulo/mod/remainder, optionally consume "by" if present
+                        let saved_pos = self.position;
+                        let saved_line = self.line;
+                        let saved_column = self.column;
+
+                        self.skip_whitespace();
+                        if let Some(next_ch) = self.current_char() {
+                            if next_ch.is_alphabetic() {
+                                let next_word = self.read_identifier();
+                                if next_word != "by" {
+                                    // Not "by", restore position
+                                    self.position = saved_pos;
+                                    self.line = saved_line;
+                                    self.column = saved_column;
+                                }
+                                // If it was "by", we consumed it and continue
+                            }
+                        }
+                        tokens.push(Token::new(TokenType::Modulo, start_line, start_column));
+                        continue;
                     }
 
                     let token_type = if let Some(keyword_type) = self.keywords.get(&identifier) {

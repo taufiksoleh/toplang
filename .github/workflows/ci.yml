@@ -255,8 +255,23 @@ jobs:
     - name: Build release binary
       run: cargo build --release --target ${{ matrix.target }}
 
-    - name: Upload artifact
+    - name: Strip binary (Unix)
+      if: runner.os != 'Windows'
+      run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
+    - name: Upload artifact to workflow
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.asset_name }}
         path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+
+    - name: Upload binaries to GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
+        name: ${{ matrix.asset_name }}
+        tag_name: ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

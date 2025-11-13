@@ -15,16 +15,81 @@ TopLang is a simple, expressive programming language with natural English-like s
 🎯 **Simple** - Easy to learn and understand
 🛠️ **Modern** - Built with modern language design principles
 
-## Getting Started
+## Installation
 
-### Prerequisites
+TopLang provides multiple installation methods. **No Rust required** for end users!
 
-To build TopLang, you only need:
+### Quick Install (Recommended)
+
+#### Linux & macOS
+
+Install with a single command:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/taufiksoleh/toplang/main/install.sh | bash
+```
+
+Or download and run the script manually:
+
+```bash
+wget https://raw.githubusercontent.com/taufiksoleh/toplang/main/install.sh
+chmod +x install.sh
+./install.sh
+```
+
+#### Windows
+
+Using PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/taufiksoleh/toplang/main/install.ps1 | iex
+```
+
+Or download and run manually:
+
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/taufiksoleh/toplang/main/install.ps1" -OutFile "install.ps1"
+.\install.ps1
+```
+
+### Homebrew (macOS & Linux)
+
+```bash
+# Add the tap
+brew tap taufiksoleh/toplang https://github.com/taufiksoleh/toplang
+
+# Install toplang
+brew install toplang
+
+# Verify installation
+top --version
+```
+
+### Pre-built Binaries
+
+Download pre-compiled binaries from the [releases page](https://github.com/taufiksoleh/toplang/releases):
+
+1. Go to [Releases](https://github.com/taufiksoleh/toplang/releases/latest)
+2. Download the binary for your platform:
+   - **Linux**: `toplang-linux-x64`
+   - **macOS**: `toplang-macos-x64`
+   - **Windows**: `toplang-windows-x64.exe`
+3. Make it executable (Linux/macOS):
+   ```bash
+   chmod +x toplang-*
+   mv toplang-* /usr/local/bin/top
+   ```
+4. On Windows, add the directory to your PATH
+
+### Building from Source
+
+If you prefer to build from source or want to contribute:
+
+#### Prerequisites
+
 - **Rust** (1.74 or later) - Install from [rustup.rs](https://rustup.rs/)
 
-That's it! No complex dependencies or build tools required.
-
-### Building the Compiler
+#### Build Steps
 
 1. Clone this repository:
 ```bash
@@ -39,7 +104,7 @@ cargo build --release
 
 The compiled `top` executable will be in `target/release/top`.
 
-Alternatively, you can install it directly:
+3. Optionally, install it to your system:
 ```bash
 cargo install --path .
 ```
@@ -235,4 +300,6 @@ The compiler is written in Rust for several reasons:
 - **Performance** - Near C/C++ performance
 - **Modern Tooling** - Cargo makes building and testing easy
 - **No Runtime Dependencies** - Static linking produces standalone executables
+
+**Note**: End users don't need Rust installed! The pre-built binaries are completely standalone and have no dependencies. Rust is only required if you want to build the compiler from source or contribute to development.
 

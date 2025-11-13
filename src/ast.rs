@@ -38,6 +38,11 @@ pub enum Expr {
         name: String,
         args: Vec<Expr>,
     },
+    Array(Vec<Expr>),
+    Index {
+        array: Box<Expr>,
+        index: Box<Expr>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,7 +56,16 @@ pub enum Stmt {
         name: String,
         value: Expr,
     },
+    IndexAssignment {
+        array: Box<Expr>,
+        index: Box<Expr>,
+        value: Expr,
+    },
     Print(Expr),
+    Ask {
+        name: String,
+        prompt: Option<Expr>,
+    },
     If {
         condition: Expr,
         then_block: Vec<Stmt>,

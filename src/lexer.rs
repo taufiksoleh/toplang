@@ -23,6 +23,9 @@ impl Lexer {
         keywords.insert("var".to_string(), TokenType::Variable);
         keywords.insert("const".to_string(), TokenType::Constant);
         keywords.insert("print".to_string(), TokenType::Print);
+        keywords.insert("ask".to_string(), TokenType::Ask);
+        keywords.insert("list".to_string(), TokenType::List);
+        keywords.insert("at".to_string(), TokenType::At);
         keywords.insert("true".to_string(), TokenType::Boolean(true));
         keywords.insert("false".to_string(), TokenType::Boolean(false));
 

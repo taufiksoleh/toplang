@@ -112,6 +112,7 @@ impl Parser {
             TokenType::Variable => self.parse_var_decl(false),
             TokenType::Constant => self.parse_var_decl(true),
             TokenType::Print => self.parse_print(),
+            TokenType::Ask => self.parse_ask(),
             TokenType::If => self.parse_if(),
             TokenType::While => self.parse_while(),
             TokenType::For => self.parse_for(),
@@ -156,6 +157,24 @@ impl Parser {
             return Err(anyhow!("Expected identifier"));
         };
 
+        // Check for array index assignment: identifier at index is value
+        if matches!(self.current_token().token_type, TokenType::At) {
+            self.advance();
+            let index = self.parse_term()?;
+
+            if matches!(self.current_token().token_type, TokenType::Assign) {
+                self.advance();
+                let value = self.parse_expression()?;
+                return Ok(Stmt::IndexAssignment {
+                    array: Box::new(Expr::Identifier(name)),
+                    index: Box::new(index),
+                    value,
+                });
+            } else {
+                return Err(anyhow!("Expected 'is' after array index"));
+            }
+        }
+
         if matches!(self.current_token().token_type, TokenType::Assign) {
             self.advance();
             let value = self.parse_expression()?;
@@ -172,6 +191,40 @@ impl Parser {
         self.advance(); // Skip 'print'
         let expr = self.parse_expression()?;
         Ok(Stmt::Print(expr))
+    }
+
+    fn parse_ask(&mut self) -> Result<Stmt> {
+        self.advance(); // Skip 'ask'
+
+        let name = if let TokenType::Identifier(n) = &self.current_token().token_type {
+            let name = n.clone();
+            self.advance();
+            name
+        } else {
+            return Err(anyhow!("Expected variable name after 'ask'"));
+        };
+
+        // Optional prompt
+        let prompt = if !matches!(
+            self.current_token().token_type,
+            TokenType::RightBrace
+                | TokenType::Eof
+                | TokenType::Variable
+                | TokenType::Constant
+                | TokenType::Print
+                | TokenType::Ask
+                | TokenType::If
+                | TokenType::While
+                | TokenType::For
+                | TokenType::Return
+                | TokenType::Identifier(_)
+        ) {
+            Some(self.parse_expression()?)
+        } else {
+            None
+        };
+
+        Ok(Stmt::Ask { name, prompt })
     }
 
     fn parse_if(&mut self) -> Result<Stmt> {
@@ -410,21 +463,57 @@ impl Parser {
     }
 
     fn parse_primary(&mut self) -> Result<Expr> {
-        match &self.current_token().token_type.clone() {
+        let mut expr = match &self.current_token().token_type.clone() {
             TokenType::Number(n) => {
                 let num = *n;
                 self.advance();
-                Ok(Expr::Number(num))
+                Expr::Number(num)
             }
             TokenType::StringLit(s) => {
                 let string = s.clone();
                 self.advance();
-                Ok(Expr::String(string))
+                Expr::String(string)
             }
             TokenType::Boolean(b) => {
                 let val = *b;
                 self.advance();
-                Ok(Expr::Boolean(val))
+                Expr::Boolean(val)
+            }
+            TokenType::List => {
+                self.advance(); // Skip 'list'
+                let mut elements = Vec::new();
+
+                // Parse list elements until we hit a statement boundary or right brace
+                loop {
+                    if matches!(
+                        self.current_token().token_type,
+                        TokenType::RightBrace
+                            | TokenType::Eof
+                            | TokenType::Variable
+                            | TokenType::Constant
+                            | TokenType::Print
+                            | TokenType::Ask
+                            | TokenType::If
+                            | TokenType::While
+                            | TokenType::For
+                            | TokenType::Return
+                    ) {
+                        break;
+                    }
+
+                    // Try to parse an expression
+                    let element = self.parse_term()?;
+                    elements.push(element);
+
+                    // Check if there's a comma
+                    if matches!(self.current_token().token_type, TokenType::Comma) {
+                        self.advance();
+                    } else {
+                        break;
+                    }
+                }
+
+                Expr::Array(elements)
             }
             TokenType::Identifier(name) => {
                 let name = name.clone();
@@ -444,22 +533,36 @@ impl Parser {
                     }
 
                     self.expect(&TokenType::RightParen)?;
-                    Ok(Expr::Call { name, args })
+                    Expr::Call { name, args }
                 } else {
-                    Ok(Expr::Identifier(name))
+                    Expr::Identifier(name)
                 }
             }
             TokenType::LeftParen => {
                 self.advance();
-                let expr = self.parse_expression()?;
+                let e = self.parse_expression()?;
                 self.expect(&TokenType::RightParen)?;
-                Ok(expr)
+                e
             }
-            _ => Err(anyhow!(
-                "Unexpected token in expression: {:?} at line {}",
-                self.current_token().token_type,
-                self.current_token().line
-            )),
+            _ => {
+                return Err(anyhow!(
+                    "Unexpected token in expression: {:?} at line {}",
+                    self.current_token().token_type,
+                    self.current_token().line
+                ))
+            }
+        };
+
+        // Check for array indexing with 'at'
+        while matches!(self.current_token().token_type, TokenType::At) {
+            self.advance();
+            let index = self.parse_term()?;
+            expr = Expr::Index {
+                array: Box::new(expr),
+                index: Box::new(index),
+            };
         }
+
+        Ok(expr)
     }
 }

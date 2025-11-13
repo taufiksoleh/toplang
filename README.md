@@ -188,6 +188,39 @@ while count less than 10 {
 }
 ```
 
+### User Input
+
+```toplang
+ask name "What is your name? "
+print "Hello, "
+print name
+
+ask age "How old are you? "
+if age greater than 18 {
+    print "You are an adult!"
+}
+```
+
+### Arrays/Lists
+
+```toplang
+# Create a list
+var numbers is list 1, 2, 3, 4, 5
+
+# Access elements (0-indexed)
+var first is numbers at 0
+var third is numbers at 2
+
+# Modify elements
+numbers at 1 is 99
+
+# Print the whole array
+print numbers  # Output: [1, 99, 3, 4, 5]
+
+# Mixed types are supported
+var mixed is list 1, "hello", 3
+```
+
 ### Functions
 
 ```toplang

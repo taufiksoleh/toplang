@@ -1,0 +1,48 @@
+# Arrays with user input example
+
+function main() {
+    print "=== Shopping List Manager ==="
+
+    # Create initial shopping list
+    var items is list "milk", "eggs", "bread"
+    print "Current shopping list:"
+    print items
+
+    # Get number of items to add
+    ask count "How many items do you want to add? "
+
+    if count greater than 0 {
+        print "Great! Let's add some items."
+
+        # Note: In this simple version, we'll just modify existing positions
+        # A more advanced version would dynamically grow the array
+
+        ask item1 "Enter item 1: "
+        items at 0 is item1
+
+        if count greater than 1 {
+            ask item2 "Enter item 2: "
+            items at 1 is item2
+        }
+
+        if count greater than 2 {
+            ask item3 "Enter item 3: "
+            items at 2 is item3
+        }
+
+        print "Updated shopping list:"
+        print items
+    }
+
+    # Access specific items
+    print "First item on list:"
+    print items at 0
+
+    print "Second item on list:"
+    print items at 1
+
+    print "Third item on list:"
+    print items at 2
+
+    return 0
+}

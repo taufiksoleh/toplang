@@ -12,6 +12,9 @@ pub enum TokenType {
     Variable,
     Constant,
     Print,
+    Ask,
+    List,
+    At,
 
     // Operators
     Plus,
@@ -73,6 +76,9 @@ impl fmt::Display for TokenType {
             TokenType::Variable => write!(f, "var"),
             TokenType::Constant => write!(f, "const"),
             TokenType::Print => write!(f, "print"),
+            TokenType::Ask => write!(f, "ask"),
+            TokenType::List => write!(f, "list"),
+            TokenType::At => write!(f, "at"),
             TokenType::Plus => write!(f, "plus"),
             TokenType::Minus => write!(f, "minus"),
             TokenType::Multiply => write!(f, "times"),

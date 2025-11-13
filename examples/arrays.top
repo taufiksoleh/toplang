@@ -1,0 +1,50 @@
+# Array example
+
+function main() {
+    print "=== Array Examples ==="
+
+    # Create a list of numbers
+    var numbers is list 10, 20, 30, 40, 50
+    print "Numbers:"
+    print numbers
+
+    # Access array elements
+    print "First element:"
+    var first is numbers at 0
+    print first
+
+    print "Third element:"
+    var third is numbers at 2
+    print third
+
+    # Modify array elements
+    print "Modifying second element to 99..."
+    numbers at 1 is 99
+    print "Updated array:"
+    print numbers
+
+    # Create a list of strings
+    var names is list "Alice", "Bob", "Charlie"
+    print "Names:"
+    print names
+
+    # Access and modify string array
+    print "First name:"
+    print names at 0
+
+    names at 2 is "Diana"
+    print "Updated names:"
+    print names
+
+    # Empty list
+    var empty is list
+    print "Empty list:"
+    print empty
+
+    # Mixed types
+    var mixed is list 1, "hello", 3
+    print "Mixed types:"
+    print mixed
+
+    return 0
+}

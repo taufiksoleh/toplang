@@ -158,14 +158,29 @@ jobs:
     - name: Build compiler
       run: cargo build --release
 
-    - name: Verify all .top files compile
+    - name: Verify non-interactive .top files compile
       run: |
-        echo "Checking all .top example files..."
-        find examples -name "*.top" -type f | while read -r file; do
+        echo "Checking non-interactive .top example files..."
+        for file in examples/*.top; do
+          # Skip interactive examples that require user input
+          if [[ "$file" == *"input.top"* ]] || [[ "$file" == *"arrays_with_input.top"* ]]; then
+            echo "⏭️  Skipping interactive example: $file"
+            continue
+          fi
           echo "Testing: $file"
           ./target/release/topc "$file" || exit 1
           echo "✅ $file passed"
         done
+
+    - name: Test interactive examples with mock input
+      run: |
+        echo "Testing input.top with mock data..."
+        echo -e "Alice\n25\n10\n5" | ./target/release/topc examples/input.top
+        echo "✅ input.top passed with mock input"
+
+        echo "Testing arrays_with_input.top with mock data..."
+        echo -e "3\napple\nbanana\norange" | ./target/release/topc examples/arrays_with_input.top
+        echo "✅ arrays_with_input.top passed with mock input"
 
     - name: Create and test arithmetic example
       run: |

@@ -15,10 +15,10 @@ use compiler::Compiler;
 use interpreter::Interpreter;
 use lexer::Lexer;
 use parser::Parser;
-use vm::VM;
 use std::fs;
 use std::path::PathBuf;
 use std::process;
+use vm::VM;
 
 #[derive(ClapParser)]
 #[command(name = "topc")]
@@ -136,8 +136,7 @@ fn run(cli: Cli) -> Result<()> {
             vm.set_debug(true);
         }
 
-        vm.execute(chunk)
-            .with_context(|| "VM runtime error")?
+        vm.execute(chunk).with_context(|| "VM runtime error")?
     } else {
         // Use traditional tree-walking interpreter
         if cli.verbose {

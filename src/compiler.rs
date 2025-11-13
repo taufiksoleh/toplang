@@ -2,7 +2,6 @@
 ///
 /// This compiler performs a single pass over the AST and generates
 /// efficient bytecode instructions for the VM to execute.
-
 use crate::ast::*;
 use crate::bytecode::*;
 use crate::optimizer;
@@ -45,7 +44,9 @@ impl Compiler {
         // Then compile all functions
         for function in &optimized_program.functions {
             let func_chunk = self.compile_function(function)?;
-            self.chunk.functions.insert(function.name.clone(), func_chunk);
+            self.chunk
+                .functions
+                .insert(function.name.clone(), func_chunk);
         }
 
         // Generate main entry point that calls main()
@@ -79,8 +80,12 @@ impl Compiler {
         }
 
         // Ensure function returns null if no explicit return
-        if self.chunk.code.is_empty() ||
-           !matches!(self.chunk.code.last(), Some(Instruction::Return) | Some(Instruction::ReturnNull)) {
+        if self.chunk.code.is_empty()
+            || !matches!(
+                self.chunk.code.last(),
+                Some(Instruction::Return) | Some(Instruction::ReturnNull)
+            )
+        {
             self.chunk.emit(Instruction::ReturnNull, self.current_line);
         }
 
@@ -98,12 +103,17 @@ impl Compiler {
     /// Compile a statement
     fn compile_stmt(&mut self, stmt: &Stmt) -> Result<()> {
         match stmt {
-            Stmt::VarDecl { name, value, is_const: _ } => {
+            Stmt::VarDecl {
+                name,
+                value,
+                is_const: _,
+            } => {
                 self.compile_expr(value)?;
 
                 if self.scope_depth == 0 {
                     // Global variable
-                    self.chunk.emit(Instruction::StoreGlobal(name.clone()), self.current_line);
+                    self.chunk
+                        .emit(Instruction::StoreGlobal(name.clone()), self.current_line);
                 } else {
                     // Local variable
                     self.add_local(name.clone())?;
@@ -116,15 +126,21 @@ impl Compiler {
 
                 // Try to find as local first
                 if let Some(local_idx) = self.resolve_local(name) {
-                    self.chunk.emit(Instruction::StoreVar(local_idx), self.current_line);
+                    self.chunk
+                        .emit(Instruction::StoreVar(local_idx), self.current_line);
                 } else {
                     // Global variable
-                    self.chunk.emit(Instruction::StoreGlobal(name.clone()), self.current_line);
+                    self.chunk
+                        .emit(Instruction::StoreGlobal(name.clone()), self.current_line);
                 }
                 Ok(())
             }
 
-            Stmt::IndexAssignment { array, index, value } => {
+            Stmt::IndexAssignment {
+                array,
+                index,
+                value,
+            } => {
                 // Compile array expression
                 self.compile_expr(array)?;
                 // Compile index expression
@@ -143,35 +159,39 @@ impl Compiler {
             }
 
             Stmt::Ask { name, prompt } => {
-                let prompt_str = if let Some(p_expr) = prompt {
-                    // For simplicity, we expect a string literal
-                    if let Expr::String(s) = p_expr {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
+                // For simplicity, we expect a string literal
+                let prompt_str = if let Some(Expr::String(s)) = prompt {
+                    Some(s.clone())
                 } else {
                     None
                 };
 
-                self.chunk.emit(Instruction::Input(prompt_str), self.current_line);
+                self.chunk
+                    .emit(Instruction::Input(prompt_str), self.current_line);
 
                 // Store the result
                 if let Some(local_idx) = self.resolve_local(name) {
-                    self.chunk.emit(Instruction::StoreVar(local_idx), self.current_line);
+                    self.chunk
+                        .emit(Instruction::StoreVar(local_idx), self.current_line);
                 } else {
-                    self.chunk.emit(Instruction::StoreGlobal(name.clone()), self.current_line);
+                    self.chunk
+                        .emit(Instruction::StoreGlobal(name.clone()), self.current_line);
                 }
                 Ok(())
             }
 
-            Stmt::If { condition, then_block, else_block } => {
+            Stmt::If {
+                condition,
+                then_block,
+                else_block,
+            } => {
                 // Compile condition
                 self.compile_expr(condition)?;
 
                 // Jump if false to else block (or end if no else)
                 let jump_to_else = self.chunk.current_position();
-                self.chunk.emit(Instruction::JumpIfFalse(0), self.current_line);
+                self.chunk
+                    .emit(Instruction::JumpIfFalse(0), self.current_line);
 
                 // Compile then block
                 self.begin_scope();
@@ -218,7 +238,8 @@ impl Compiler {
 
                 // Jump to end if false
                 let exit_jump = self.chunk.current_position();
-                self.chunk.emit(Instruction::JumpIfFalse(0), self.current_line);
+                self.chunk
+                    .emit(Instruction::JumpIfFalse(0), self.current_line);
 
                 // Compile body
                 self.begin_scope();
@@ -228,7 +249,8 @@ impl Compiler {
                 self.end_scope();
 
                 // Jump back to start
-                self.chunk.emit(Instruction::Jump(loop_start), self.current_line);
+                self.chunk
+                    .emit(Instruction::Jump(loop_start), self.current_line);
 
                 // Patch exit jump
                 let end = self.chunk.current_position();
@@ -245,7 +267,12 @@ impl Compiler {
                 Ok(())
             }
 
-            Stmt::For { init, condition, increment, body } => {
+            Stmt::For {
+                init,
+                condition,
+                increment,
+                body,
+            } => {
                 self.begin_scope();
 
                 // Compile initialization
@@ -260,7 +287,8 @@ impl Compiler {
 
                 // Jump to end if false
                 let exit_jump = self.chunk.current_position();
-                self.chunk.emit(Instruction::JumpIfFalse(0), self.current_line);
+                self.chunk
+                    .emit(Instruction::JumpIfFalse(0), self.current_line);
 
                 // Compile body
                 for stmt in body {
@@ -271,7 +299,8 @@ impl Compiler {
                 self.compile_stmt(increment)?;
 
                 // Jump back to condition
-                self.chunk.emit(Instruction::Jump(loop_start), self.current_line);
+                self.chunk
+                    .emit(Instruction::Jump(loop_start), self.current_line);
 
                 // Patch exit jump
                 let end = self.chunk.current_position();
@@ -312,7 +341,8 @@ impl Compiler {
 
             Stmt::Continue => {
                 if let Some(&loop_start) = self.loop_starts.last() {
-                    self.chunk.emit(Instruction::Jump(loop_start), self.current_line);
+                    self.chunk
+                        .emit(Instruction::Jump(loop_start), self.current_line);
                 }
                 Ok(())
             }
@@ -330,29 +360,34 @@ impl Compiler {
         match expr {
             Expr::Number(n) => {
                 let const_idx = self.chunk.add_constant(Constant::Number(*n));
-                self.chunk.emit(Instruction::LoadConst(const_idx), self.current_line);
+                self.chunk
+                    .emit(Instruction::LoadConst(const_idx), self.current_line);
                 Ok(())
             }
 
             Expr::String(s) => {
                 let const_idx = self.chunk.add_constant(Constant::String(s.clone()));
-                self.chunk.emit(Instruction::LoadConst(const_idx), self.current_line);
+                self.chunk
+                    .emit(Instruction::LoadConst(const_idx), self.current_line);
                 Ok(())
             }
 
             Expr::Boolean(b) => {
                 let const_idx = self.chunk.add_constant(Constant::Boolean(*b));
-                self.chunk.emit(Instruction::LoadConst(const_idx), self.current_line);
+                self.chunk
+                    .emit(Instruction::LoadConst(const_idx), self.current_line);
                 Ok(())
             }
 
             Expr::Identifier(name) => {
                 // Try local first
                 if let Some(local_idx) = self.resolve_local(name) {
-                    self.chunk.emit(Instruction::LoadVar(local_idx), self.current_line);
+                    self.chunk
+                        .emit(Instruction::LoadVar(local_idx), self.current_line);
                 } else {
                     // Global variable
-                    self.chunk.emit(Instruction::LoadGlobal(name.clone()), self.current_line);
+                    self.chunk
+                        .emit(Instruction::LoadGlobal(name.clone()), self.current_line);
                 }
                 Ok(())
             }
@@ -401,7 +436,10 @@ impl Compiler {
                     self.compile_expr(arg)?;
                 }
 
-                self.chunk.emit(Instruction::Call(name.clone(), args.len()), self.current_line);
+                self.chunk.emit(
+                    Instruction::Call(name.clone(), args.len()),
+                    self.current_line,
+                );
                 Ok(())
             }
 
@@ -411,7 +449,8 @@ impl Compiler {
                     self.compile_expr(elem)?;
                 }
 
-                self.chunk.emit(Instruction::MakeArray(elements.len()), self.current_line);
+                self.chunk
+                    .emit(Instruction::MakeArray(elements.len()), self.current_line);
                 Ok(())
             }
 
@@ -454,7 +493,10 @@ impl Compiler {
                 break;
             }
             if local.name == name {
-                return Err(anyhow!("Variable '{}' already declared in this scope", name));
+                return Err(anyhow!(
+                    "Variable '{}' already declared in this scope",
+                    name
+                ));
             }
         }
 

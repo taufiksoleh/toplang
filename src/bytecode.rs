@@ -4,6 +4,7 @@
 /// than walking the AST tree. Each instruction operates on a value stack.
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)] // Some instructions are defined but not yet emitted by compiler
 pub enum Instruction {
     // Constants and Variables
     /// Push a constant value onto the stack
@@ -115,10 +116,10 @@ pub enum Instruction {
     /// Pop N values and create an array
     MakeArray(usize),
 
-    /// Pop index and array, push array[index]
+    /// Pop index and array, push array\[index\]
     GetIndex,
 
-    /// Pop value, index, and array, set array[index] = value
+    /// Pop value, index, and array, set array\[index\] = value
     SetIndex,
 
     // String Operations
@@ -163,6 +164,7 @@ pub struct Chunk {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)] // Null variant reserved for future use
 pub enum Constant {
     Number(f64),
     String(String),
@@ -207,9 +209,9 @@ impl Chunk {
     /// Patch a jump instruction at the given position
     pub fn patch_jump(&mut self, position: usize, target: usize) {
         match &mut self.code[position] {
-            Instruction::Jump(ref mut offset) |
-            Instruction::JumpIfFalse(ref mut offset) |
-            Instruction::JumpIfTrue(ref mut offset) => {
+            Instruction::Jump(ref mut offset)
+            | Instruction::JumpIfFalse(ref mut offset)
+            | Instruction::JumpIfTrue(ref mut offset) => {
                 *offset = target;
             }
             _ => panic!("Attempted to patch non-jump instruction"),

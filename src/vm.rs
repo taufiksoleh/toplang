@@ -2,7 +2,6 @@
 ///
 /// This is a stack-based VM that executes bytecode instructions in a tight loop.
 /// This approach is much faster than walking the AST tree.
-
 use crate::bytecode::*;
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;
@@ -149,7 +148,9 @@ impl VM {
                 if self.debug {
                     println!("Stack: {:?}", &self.stack[0..self.sp]);
                     print!("Execute: ");
-                    frame.chunk.disassemble_instruction(&instruction, frame.ip - 1);
+                    frame
+                        .chunk
+                        .disassemble_instruction(&instruction, frame.ip - 1);
                 }
 
                 (instruction, frame.stack_base)
@@ -176,12 +177,14 @@ impl VM {
                 }
 
                 Instruction::StoreVar(idx) => {
-                    let value = self.pop();  // Pop the value off the stack
+                    let value = self.pop(); // Pop the value off the stack
                     self.stack[stack_base + idx] = value;
                 }
 
                 Instruction::LoadGlobal(name) => {
-                    let value = self.globals.get(&name)
+                    let value = self
+                        .globals
+                        .get(&name)
                         .ok_or_else(|| anyhow!("Undefined variable: {}", name))?
                         .clone();
                     self.push(value);
@@ -350,7 +353,10 @@ impl VM {
                     // Get the function chunk
                     let func_chunk = {
                         let current_frame = self.frames.last().unwrap();
-                        current_frame.chunk.functions.get(&name)
+                        current_frame
+                            .chunk
+                            .functions
+                            .get(&name)
                             .ok_or_else(|| anyhow!("Undefined function: {}", name))?
                             .clone()
                     };
@@ -450,7 +456,9 @@ impl VM {
                     let len = match value {
                         Value::String(s) => s.len(),
                         Value::Array(a) => a.len(),
-                        _ => return Err(anyhow!("Length can only be applied to strings or arrays")),
+                        _ => {
+                            return Err(anyhow!("Length can only be applied to strings or arrays"))
+                        }
                     };
                     self.push(Value::Number(len as f64));
                 }
@@ -529,6 +537,7 @@ impl VM {
         &self.stack[self.sp - 1 - distance]
     }
 
+    #[allow(clippy::only_used_in_recursion)] // False positive - self is needed for method context
     fn values_equal(&self, a: &Value, b: &Value) -> bool {
         match (a, b) {
             (Value::Number(x), Value::Number(y)) => (x - y).abs() < f64::EPSILON,

@@ -2,7 +2,6 @@
 ///
 /// This module performs compile-time evaluation of constant expressions,
 /// eliminating runtime overhead for operations with known values.
-
 use crate::ast::*;
 
 /// Optimize an expression by folding constants
@@ -14,15 +13,9 @@ pub fn fold_constants(expr: &Expr) -> Expr {
 
             // Try to fold if both sides are constants
             match (&left, op, &right) {
-                (Expr::Number(a), BinaryOp::Add, Expr::Number(b)) => {
-                    Expr::Number(a + b)
-                }
-                (Expr::Number(a), BinaryOp::Subtract, Expr::Number(b)) => {
-                    Expr::Number(a - b)
-                }
-                (Expr::Number(a), BinaryOp::Multiply, Expr::Number(b)) => {
-                    Expr::Number(a * b)
-                }
+                (Expr::Number(a), BinaryOp::Add, Expr::Number(b)) => Expr::Number(a + b),
+                (Expr::Number(a), BinaryOp::Subtract, Expr::Number(b)) => Expr::Number(a - b),
+                (Expr::Number(a), BinaryOp::Multiply, Expr::Number(b)) => Expr::Number(a * b),
                 (Expr::Number(a), BinaryOp::Divide, Expr::Number(b)) => {
                     if *b != 0.0 {
                         Expr::Number(a / b)
@@ -46,30 +39,20 @@ pub fn fold_constants(expr: &Expr) -> Expr {
                         }
                     }
                 }
-                (Expr::Boolean(a), BinaryOp::And, Expr::Boolean(b)) => {
-                    Expr::Boolean(*a && *b)
-                }
-                (Expr::Boolean(a), BinaryOp::Or, Expr::Boolean(b)) => {
-                    Expr::Boolean(*a || *b)
-                }
+                (Expr::Boolean(a), BinaryOp::And, Expr::Boolean(b)) => Expr::Boolean(*a && *b),
+                (Expr::Boolean(a), BinaryOp::Or, Expr::Boolean(b)) => Expr::Boolean(*a || *b),
                 (Expr::Number(a), BinaryOp::Equals, Expr::Number(b)) => {
                     Expr::Boolean((a - b).abs() < f64::EPSILON)
                 }
                 (Expr::Number(a), BinaryOp::NotEquals, Expr::Number(b)) => {
                     Expr::Boolean((a - b).abs() >= f64::EPSILON)
                 }
-                (Expr::Number(a), BinaryOp::Greater, Expr::Number(b)) => {
-                    Expr::Boolean(a > b)
-                }
+                (Expr::Number(a), BinaryOp::Greater, Expr::Number(b)) => Expr::Boolean(a > b),
                 (Expr::Number(a), BinaryOp::GreaterOrEquals, Expr::Number(b)) => {
                     Expr::Boolean(a >= b)
                 }
-                (Expr::Number(a), BinaryOp::Less, Expr::Number(b)) => {
-                    Expr::Boolean(a < b)
-                }
-                (Expr::Number(a), BinaryOp::LessOrEquals, Expr::Number(b)) => {
-                    Expr::Boolean(a <= b)
-                }
+                (Expr::Number(a), BinaryOp::Less, Expr::Number(b)) => Expr::Boolean(a < b),
+                (Expr::Number(a), BinaryOp::LessOrEquals, Expr::Number(b)) => Expr::Boolean(a <= b),
                 (Expr::String(a), BinaryOp::Add, Expr::String(b)) => {
                     Expr::String(format!("{}{}", a, b))
                 }
@@ -180,7 +163,11 @@ pub fn fold_constants(expr: &Expr) -> Expr {
 /// Optimize a statement by folding constants in expressions
 pub fn optimize_stmt(stmt: &Stmt) -> Stmt {
     match stmt {
-        Stmt::VarDecl { name, value, is_const } => Stmt::VarDecl {
+        Stmt::VarDecl {
+            name,
+            value,
+            is_const,
+        } => Stmt::VarDecl {
             name: name.clone(),
             value: fold_constants(value),
             is_const: *is_const,
@@ -191,7 +178,11 @@ pub fn optimize_stmt(stmt: &Stmt) -> Stmt {
             value: fold_constants(value),
         },
 
-        Stmt::IndexAssignment { array, index, value } => Stmt::IndexAssignment {
+        Stmt::IndexAssignment {
+            array,
+            index,
+            value,
+        } => Stmt::IndexAssignment {
             array: Box::new(fold_constants(array)),
             index: Box::new(fold_constants(index)),
             value: fold_constants(value),

@@ -1,0 +1,262 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master", "claude/**" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust: [stable]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        components: rustfmt, clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-registry-
+
+    - name: Cache cargo index
+      uses: actions/cache@v4
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-git-
+
+    - name: Cache cargo build
+      uses: actions/cache@v4
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-build-target-
+
+    - name: Check code formatting
+      run: cargo fmt -- --check
+      continue-on-error: true
+
+    - name: Run clippy
+      run: cargo clippy -- -D warnings
+      continue-on-error: true
+
+    - name: Build (debug)
+      run: cargo build --verbose
+
+    - name: Run tests
+      run: cargo test --verbose
+
+    - name: Build (release)
+      run: cargo build --release --verbose
+
+    - name: Test hello.top example (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        ./target/release/top examples/hello.top
+        echo "✅ hello.top executed successfully"
+
+    - name: Test hello.top example (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        .\target\release\top.exe examples\hello.top
+        echo "✅ hello.top executed successfully"
+
+    - name: Test verbose mode (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        ./target/release/top -v examples/hello.top
+        echo "✅ Verbose mode works"
+
+    - name: Test verbose mode (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        .\target\release\top.exe -v examples\hello.top
+        echo "✅ Verbose mode works"
+
+    - name: Test show-tokens flag (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        ./target/release/top -t examples/hello.top
+        echo "✅ Show-tokens flag works"
+
+    - name: Test show-tokens flag (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        .\target\release\top.exe -t examples\hello.top
+        echo "✅ Show-tokens flag works"
+
+    - name: Test show-ast flag (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        ./target/release/top -a examples/hello.top
+        echo "✅ Show-ast flag works"
+
+    - name: Test show-ast flag (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        .\target\release\top.exe -a examples\hello.top
+        echo "✅ Show-ast flag works"
+
+  # Check minimum supported Rust version
+  msrv:
+    name: Check MSRV (1.74.0)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust 1.74.0
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: 1.74.0
+
+    - name: Build with MSRV
+      run: cargo build --verbose
+
+    - name: Test with MSRV
+      run: cargo test --verbose
+
+  # Additional syntax validation
+  syntax-check:
+    name: Syntax Check Examples
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Build compiler
+      run: cargo build --release
+
+    - name: Verify all .top files compile
+      run: |
+        echo "Checking all .top example files..."
+        find examples -name "*.top" -type f | while read -r file; do
+          echo "Testing: $file"
+          ./target/release/top "$file" || exit 1
+          echo "✅ $file passed"
+        done
+
+    - name: Create and test arithmetic example
+      run: |
+        cat > /tmp/test_arithmetic.top << 'EOF'
+        function main() {
+            var a is 10
+            var b is 5
+            var sum is a plus b
+            var diff is a minus b
+            var prod is a times b
+            var quot is a divided by b
+            print sum
+            print diff
+            print prod
+            print quot
+            return 0
+        }
+        EOF
+        ./target/release/top /tmp/test_arithmetic.top
+        echo "✅ Arithmetic operations test passed"
+
+    - name: Create and test control flow example
+      run: |
+        cat > /tmp/test_control.top << 'EOF'
+        function main() {
+            var x is 10
+            if x greater than 5 {
+                print "x is greater than 5"
+            } else {
+                print "x is not greater than 5"
+            }
+
+            var i is 0
+            while i less than 3 {
+                print i
+                i is i plus 1
+            }
+
+            return 0
+        }
+        EOF
+        ./target/release/top /tmp/test_control.top
+        echo "✅ Control flow test passed"
+
+  # Security audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
+
+    - name: Run security audit
+      run: cargo audit
+      continue-on-error: true
+
+  # Build artifacts for release
+  build-artifacts:
+    name: Build Release Artifacts
+    runs-on: ${{ matrix.os }}
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact_name: top
+            asset_name: toplang-linux-x64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: top.exe
+            asset_name: toplang-windows-x64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: top
+            asset_name: toplang-macos-x64
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        target: ${{ matrix.target }}
+
+    - name: Build release binary
+      run: cargo build --release --target ${{ matrix.target }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.asset_name }}
+        path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}

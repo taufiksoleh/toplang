@@ -1,0 +1,61 @@
+# Control flow examples
+
+function main() {
+    print "=== Control Flow Examples ==="
+
+    # If-else statement
+    print "Testing if-else:"
+    var age is 25
+
+    if age greater than 18 {
+        print "You are an adult"
+    } else {
+        print "You are a minor"
+    }
+
+    # While loop
+    print "While loop - counting to 5:"
+    var counter is 1
+    while counter less than 6 {
+        print counter
+        counter is counter plus 1
+    }
+
+    # Nested if
+    print "Nested conditions:"
+    var score is 85
+
+    if score greater than 90 {
+        print "Grade: A"
+    } else {
+        if score greater than 80 {
+            print "Grade: B"
+        } else {
+            if score greater than 70 {
+                print "Grade: C"
+            } else {
+                print "Grade: D or F"
+            }
+        }
+    }
+
+    # Comparison operators
+    print "Comparison tests:"
+    var x is 10
+    var y is 10
+
+    if x equals y {
+        print "x equals y"
+    } else {
+        print "x does not equal y"
+    }
+
+    var z is 5
+    if z less than x {
+        print "z is less than x"
+    } else {
+        print "z is not less than x"
+    }
+
+    return 0
+}

@@ -1,0 +1,33 @@
+# Arithmetic operations example
+
+function main() {
+    print "=== Arithmetic Operations ==="
+
+    var a is 15
+    var b is 4
+
+    print "a = 15, b = 4"
+
+    var sum is a plus b
+    print "Addition: 15 + 4 ="
+    print sum
+
+    var difference is a minus b
+    print "Subtraction: 15 - 4 ="
+    print difference
+
+    var product is a times b
+    print "Multiplication: 15 * 4 ="
+    print product
+
+    var quotient is a divided by b
+    print "Division: 15 / 4 ="
+    print quotient
+
+    # Nested expressions
+    var complex is a plus b times 2
+    print "Complex: 15 + (4 * 2) ="
+    print complex
+
+    return 0
+}

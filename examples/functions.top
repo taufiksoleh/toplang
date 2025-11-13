@@ -1,0 +1,35 @@
+# Functions example
+
+function greet(name) {
+    print "Hello,"
+    print name
+    print "!"
+    return 0
+}
+
+function add(x, y) {
+    var result is x plus y
+    return result
+}
+
+function countdown(start) {
+    var i is start
+    while i greater than 0 {
+        print i
+        i is i minus 1
+    }
+    print "Blast off!"
+    return 0
+}
+
+function main() {
+    print "=== Function Examples ==="
+
+    greet("Alice")
+    greet("Bob")
+
+    print "Countdown from 5:"
+    countdown(5)
+
+    return 0
+}

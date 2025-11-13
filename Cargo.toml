@@ -1,0 +1,23 @@
+[package]
+name = "toplang"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.74"
+authors = ["TopLang Contributors"]
+description = "A simple, human-first programming language"
+license = "MIT"
+
+[[bin]]
+name = "top"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
+colored = "2.1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

@@ -283,15 +283,15 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             artifact_name: topc
-            asset_name: toplang-linux-x64
+            asset_name: topc-linux-x64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact_name: topc.exe
-            asset_name: toplang-windows-x64.exe
+            asset_name: topc-windows-x64.exe
           - os: macos-latest
             target: x86_64-apple-darwin
             artifact_name: topc
-            asset_name: toplang-macos-x64
+            asset_name: topc-macos-x64
 
     steps:
     - name: Checkout code
@@ -327,13 +327,33 @@ jobs:
       with:
         path: artifacts
 
-    - name: Display downloaded artifacts
-      run: ls -R artifacts
+    - name: Create archives
+      run: |
+        # Create tar.gz for Linux (contains topc)
+        cd artifacts/topc-linux-x64
+        tar -czf ../../topc-linux-x64.tar.gz topc
+        cd ../..
+
+        # Create zip for Windows (contains topc.exe)
+        cd artifacts/topc-windows-x64.exe
+        zip ../../topc-windows-x64.zip topc.exe
+        cd ../..
+
+        # Create tar.gz for macOS (contains topc)
+        cd artifacts/topc-macos-x64
+        tar -czf ../../topc-macos-x64.tar.gz topc
+        cd ../..
+
+    - name: Display created archives
+      run: ls -lh *.tar.gz *.zip
 
     - name: Create GitHub Release with all binaries
       uses: softprops/action-gh-release@v1
       with:
-        files: artifacts/*/*
+        files: |
+          topc-linux-x64.tar.gz
+          topc-windows-x64.zip
+          topc-macos-x64.tar.gz
         draft: false
         prerelease: false
       env:

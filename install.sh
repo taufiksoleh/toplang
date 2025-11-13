@@ -72,12 +72,12 @@ install_toplang() {
 
     # Construct the asset name based on OS
     if [ "$OS" = "windows" ]; then
-        ASSET_NAME="toplang-windows-${ARCH}.exe"
+        ASSET_NAME="topc-windows-${ARCH}.zip"
         BINARY_NAME="topc.exe"
     elif [ "$OS" = "linux" ]; then
-        ASSET_NAME="toplang-linux-${ARCH}"
+        ASSET_NAME="topc-linux-${ARCH}.tar.gz"
     elif [ "$OS" = "macos" ]; then
-        ASSET_NAME="toplang-macos-${ARCH}"
+        ASSET_NAME="topc-macos-${ARCH}.tar.gz"
     fi
 
     # Get latest version
@@ -98,21 +98,37 @@ install_toplang() {
     # Create install directory if it doesn't exist
     mkdir -p "$INSTALL_DIR"
 
-    # Download the binary
-    TEMP_FILE=$(mktemp)
+    # Download the archive
+    TEMP_DIR=$(mktemp -d)
+    TEMP_FILE="$TEMP_DIR/$ASSET_NAME"
+
     if command -v curl >/dev/null 2>&1; then
         curl -L -o "$TEMP_FILE" "$DOWNLOAD_URL" || error "Download failed"
     elif command -v wget >/dev/null 2>&1; then
         wget -O "$TEMP_FILE" "$DOWNLOAD_URL" || error "Download failed"
     fi
 
-    # Move to install directory
-    mv "$TEMP_FILE" "$INSTALL_DIR/$BINARY_NAME"
+    info "Extracting archive..."
+
+    # Extract the archive
+    if [ "$OS" = "windows" ]; then
+        # For Windows (though this script is typically not used on Windows)
+        unzip -q "$TEMP_FILE" -d "$TEMP_DIR" || error "Extraction failed"
+    else
+        # For Linux and macOS
+        tar -xzf "$TEMP_FILE" -C "$TEMP_DIR" || error "Extraction failed"
+    fi
+
+    # Move the extracted binary to install directory
+    mv "$TEMP_DIR/$BINARY_NAME" "$INSTALL_DIR/$BINARY_NAME"
 
     # Make executable (Unix only)
     if [ "$OS" != "windows" ]; then
         chmod +x "$INSTALL_DIR/$BINARY_NAME"
     fi
+
+    # Clean up temporary files
+    rm -rf "$TEMP_DIR"
 
     info "✓ TopLang installed successfully to: $INSTALL_DIR/$BINARY_NAME"
 

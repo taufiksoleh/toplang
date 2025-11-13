@@ -57,7 +57,7 @@ function Install-TopLang {
     Write-Info "Latest version: $Version"
 
     # Construct download URL
-    $AssetName = "toplang-windows-$Arch.exe"
+    $AssetName = "topc-windows-$Arch.zip"
     $DownloadUrl = "https://github.com/$RepoOwner/$RepoName/releases/download/$Version/$AssetName"
 
     Write-Info "Downloading from: $DownloadUrl"
@@ -67,17 +67,35 @@ function Install-TopLang {
         New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     }
 
-    # Download the binary
-    $TempFile = [System.IO.Path]::GetTempFileName()
+    # Download the archive
+    $TempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.Guid]::NewGuid().ToString())
+    New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
+    $TempFile = Join-Path $TempDir $AssetName
+
     try {
         Invoke-WebRequest -Uri $DownloadUrl -OutFile $TempFile
     } catch {
+        Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
         Write-Error-Custom "Download failed: $_"
     }
 
-    # Move to install directory
+    Write-Info "Extracting archive..."
+
+    # Extract the archive
+    try {
+        Expand-Archive -Path $TempFile -DestinationPath $TempDir -Force
+    } catch {
+        Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Error-Custom "Extraction failed: $_"
+    }
+
+    # Move the extracted binary to install directory
     $InstallPath = Join-Path $InstallDir $BinaryName
-    Move-Item -Path $TempFile -Destination $InstallPath -Force
+    $ExtractedBinary = Join-Path $TempDir $BinaryName
+    Move-Item -Path $ExtractedBinary -Destination $InstallPath -Force
+
+    # Clean up temporary files
+    Remove-Item -Path $TempDir -Recurse -Force -ErrorAction SilentlyContinue
 
     Write-Info "✓ TopLang installed successfully to: $InstallPath"
 

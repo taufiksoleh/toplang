@@ -55,7 +55,7 @@ jobs:
     - name: Check README examples
       run: |
         echo "Verifying README has required sections..."
-        grep -q "## Getting Started" README.md
+        grep -q "## Installation" README.md
         grep -q "## Language Syntax" README.md
         grep -q "## Features" README.md
         echo "✅ README structure verified"

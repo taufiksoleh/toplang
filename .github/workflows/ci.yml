@@ -296,8 +296,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        ref: main
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -321,8 +319,6 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-        name: ${{ matrix.asset_name }}
-        tag_name: ${{ github.ref_name }}
         draft: false
         prerelease: false
       env:

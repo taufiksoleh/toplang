@@ -222,9 +222,10 @@ impl NanBoxVM {
                 // Super-fast integer operations (no error checking)
                 Instruction::AddInt => {
                     if self.sp >= 2 {
-                        if let (NanValue::number(b), NanValue::number(a)) =
-                            (&self.stack[self.sp - 1], &self.stack[self.sp - 2])
-                        {
+                        if let (Some(b), Some(a)) = (
+                            self.stack[self.sp - 1].as_number(),
+                            self.stack[self.sp - 2].as_number(),
+                        ) {
                             let result = a + b;
                             self.sp -= 2;
                             self.push_fast(NanValue::number(result));
@@ -240,9 +241,10 @@ impl NanBoxVM {
 
                 Instruction::SubInt => {
                     if self.sp >= 2 {
-                        if let (NanValue::number(b), NanValue::number(a)) =
-                            (&self.stack[self.sp - 1], &self.stack[self.sp - 2])
-                        {
+                        if let (Some(b), Some(a)) = (
+                            self.stack[self.sp - 1].as_number(),
+                            self.stack[self.sp - 2].as_number(),
+                        ) {
                             let result = a - b;
                             self.sp -= 2;
                             self.push_fast(NanValue::number(result));
@@ -258,9 +260,10 @@ impl NanBoxVM {
 
                 Instruction::MulInt => {
                     if self.sp >= 2 {
-                        if let (NanValue::number(b), NanValue::number(a)) =
-                            (&self.stack[self.sp - 1], &self.stack[self.sp - 2])
-                        {
+                        if let (Some(b), Some(a)) = (
+                            self.stack[self.sp - 1].as_number(),
+                            self.stack[self.sp - 2].as_number(),
+                        ) {
                             let result = a * b;
                             self.sp -= 2;
                             self.push_fast(NanValue::number(result));
@@ -276,9 +279,10 @@ impl NanBoxVM {
 
                 Instruction::LessInt => {
                     if self.sp >= 2 {
-                        if let (NanValue::number(b), NanValue::number(a)) =
-                            (&self.stack[self.sp - 1], &self.stack[self.sp - 2])
-                        {
+                        if let (Some(b), Some(a)) = (
+                            self.stack[self.sp - 1].as_number(),
+                            self.stack[self.sp - 2].as_number(),
+                        ) {
                             let result = a < b;
                             self.sp -= 2;
                             self.push_fast(NanValue::boolean(result));
@@ -393,9 +397,11 @@ impl NanBoxVM {
                     self.push_fast(return_value);
 
                     if self.frames.is_empty() {
-                        let exit_code = match self.pop_fast() {
-                            NanValue::number(n) => n as i32,
-                            _ => 0,
+                        let val = self.pop_fast();
+                        let exit_code = if let Some(n) = val.as_number() {
+                            n as i32
+                        } else {
+                            0
                         };
                         return Ok(exit_code);
                     }
@@ -455,10 +461,12 @@ impl NanBoxVM {
 
                 Instruction::Length => {
                     let value = self.pop_fast();
-                    let len = if value.is_string() {
-                        NanValue::string(s) => s.len(),
-                        NanValue::array(a) => a.len(),
-                        _ => return Err(anyhow!("Length can only be applied to strings or arrays")),
+                    let len = if let Some(s) = value.as_string() {
+                        s.len()
+                    } else if let Some(a) = value.as_array() {
+                        a.len()
+                    } else {
+                        return Err(anyhow!("Length can only be applied to strings or arrays"));
                     };
                     self.push_fast(NanValue::number(len as f64));
                 }
@@ -526,35 +534,18 @@ impl NanBoxVM {
     }
 
     #[inline(always)]
-    fn pop_fast(&mut self) -> Value {
+    fn pop_fast(&mut self) -> NanValue {
         self.sp -= 1;
         std::mem::replace(&mut self.stack[self.sp], NanValue::null())
     }
 
     #[inline(always)]
-    fn peek_fast(&self, distance: usize) -> &Value {
+    fn peek_fast(&self, distance: usize) -> &NanValue {
         &self.stack[self.sp - 1 - distance]
     }
 
     #[allow(clippy::only_used_in_recursion)]
-    fn values_equal(&self, a: &Value, b: &Value) -> bool {
-        match (a, b) {
-            (NanValue::number(x), NanValue::number(y)) => (x - y).abs() < f64::EPSILON,
-            (NanValue::string(x), NanValue::string(y)) => x == y,
-            (NanValue::boolean(x), NanValue::boolean(y)) => x == y,
-            (NanValue::null(), NanValue::null()) => true,
-            (NanValue::array(x), NanValue::array(y)) => {
-                if x.len() != y.len() {
-                    return false;
-                }
-                for (a, b) in x.iter().zip(y.iter()) {
-                    if !self.values_equal(a, b) {
-                        return false;
-                    }
-                }
-                true
-            }
-            _ => false,
-        }
+    fn values_equal(&self, a: &NanValue, b: &NanValue) -> bool {
+        a.equals(b)
     }
 }

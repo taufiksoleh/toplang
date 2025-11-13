@@ -27,6 +27,9 @@ const TAG_ARRAY: u64 = QNAN | 4;
 // Mask for extracting pointer (lower 48 bits)
 const POINTER_MASK: u64 = 0x0000_FFFF_FFFF_FFFF;
 
+// Mask for checking type tags (upper 16 bits + lower 4 bits)
+const TYPE_MASK: u64 = 0xFFFF_0000_0000_000F;
+
 /// A NaN-boxed value - all types fit in 64 bits
 /// Uses Rc for safe heap memory management
 pub struct NanValue(u64);
@@ -89,12 +92,12 @@ impl NanValue {
 
     #[inline]
     pub fn is_string(&self) -> bool {
-        (self.0 & !POINTER_MASK) == TAG_STRING
+        (self.0 & TYPE_MASK) == TAG_STRING
     }
 
     #[inline]
     pub fn is_array(&self) -> bool {
-        (self.0 & !POINTER_MASK) == TAG_ARRAY
+        (self.0 & TYPE_MASK) == TAG_ARRAY
     }
 
     // ===== Extractors =====
@@ -122,9 +125,11 @@ impl NanValue {
     #[inline]
     pub fn as_string(&self) -> Option<Rc<String>> {
         if self.is_string() {
-            let ptr = (self.0 & POINTER_MASK) as *const String;
+            // Extract pointer by masking out tag bits (keep only middle 45 bits for pointer)
+            let ptr = ((self.0 & POINTER_MASK) & !0xF) as *const String;
             // Clone the Rc to increment reference count
             unsafe {
+                Rc::increment_strong_count(ptr);
                 Some(Rc::from_raw(ptr))
             }
         } else {
@@ -135,9 +140,11 @@ impl NanValue {
     #[inline]
     pub fn as_array(&self) -> Option<Rc<Vec<NanValue>>> {
         if self.is_array() {
-            let ptr = (self.0 & POINTER_MASK) as *const Vec<NanValue>;
+            // Extract pointer by masking out tag bits (keep only middle 45 bits for pointer)
+            let ptr = ((self.0 & POINTER_MASK) & !0xF) as *const Vec<NanValue>;
             // Clone the Rc to increment reference count
             unsafe {
+                Rc::increment_strong_count(ptr);
                 Some(Rc::from_raw(ptr))
             }
         } else {
@@ -209,14 +216,14 @@ impl NanValue {
 impl Clone for NanValue {
     fn clone(&self) -> Self {
         if self.is_string() {
-            let ptr = (self.0 & POINTER_MASK) as *const String;
+            let ptr = ((self.0 & POINTER_MASK) & !0xF) as *const String;
             unsafe {
                 // Increment reference count for the new clone
                 Rc::increment_strong_count(ptr);
             }
             NanValue(self.0)
         } else if self.is_array() {
-            let ptr = (self.0 & POINTER_MASK) as *const Vec<NanValue>;
+            let ptr = ((self.0 & POINTER_MASK) & !0xF) as *const Vec<NanValue>;
             unsafe {
                 // Increment reference count for the new clone
                 Rc::increment_strong_count(ptr);
@@ -233,13 +240,13 @@ impl Clone for NanValue {
 impl Drop for NanValue {
     fn drop(&mut self) {
         if self.is_string() {
-            let ptr = (self.0 & POINTER_MASK) as *const String;
+            let ptr = ((self.0 & POINTER_MASK) & !0xF) as *const String;
             unsafe {
                 // Decrement reference count (and free if zero)
                 drop(Rc::from_raw(ptr));
             }
         } else if self.is_array() {
-            let ptr = (self.0 & POINTER_MASK) as *const Vec<NanValue>;
+            let ptr = ((self.0 & POINTER_MASK) & !0xF) as *const Vec<NanValue>;
             unsafe {
                 // Decrement reference count (and free if zero)
                 drop(Rc::from_raw(ptr));

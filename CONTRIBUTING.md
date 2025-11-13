@@ -17,7 +17,7 @@ Thank you for your interest in contributing to TopLang! We welcome contributions
 
 ### Prerequisites
 
-- Rust 1.70 or later
+- Rust 1.74 or later
 - Git
 
 ### Building

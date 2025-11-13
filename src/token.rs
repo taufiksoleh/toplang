@@ -32,10 +32,13 @@ pub enum TokenType {
     Modulo,
     Assign,
     Equals,
+    #[allow(dead_code)] // Constructed dynamically in lexer for "not equals"
     NotEquals,
     Greater,
+    #[allow(dead_code)] // Constructed dynamically in lexer for "greater than or equals"
     GreaterOrEquals,
     Less,
+    #[allow(dead_code)] // Constructed dynamically in lexer for "less than or equals"
     LessOrEquals,
     And,
     Or,

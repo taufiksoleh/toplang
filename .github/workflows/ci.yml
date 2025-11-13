@@ -297,6 +297,19 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Update Cargo.toml version
+      shell: bash
+      run: |
+        VERSION="${{ needs.update-version.outputs.version }}"
+        echo "Updating Cargo.toml to version $VERSION"
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
+        else
+          sed -i "" "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml 2>/dev/null || \
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
+        fi
+        grep "^version" Cargo.toml
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:

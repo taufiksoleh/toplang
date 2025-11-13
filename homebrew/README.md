@@ -14,7 +14,7 @@ brew tap taufiksoleh/toplang https://github.com/taufiksoleh/toplang
 brew install toplang
 
 # Verify installation
-top --version
+topc --version
 ```
 
 ## For Maintainers: Setting Up the Homebrew Tap

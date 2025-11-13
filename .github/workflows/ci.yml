@@ -74,49 +74,49 @@ jobs:
     - name: Test hello.top example (Unix)
       if: runner.os != 'Windows'
       run: |
-        ./target/release/top examples/hello.top
+        ./target/release/topc examples/hello.top
         echo "✅ hello.top executed successfully"
 
     - name: Test hello.top example (Windows)
       if: runner.os == 'Windows'
       run: |
-        .\target\release\top.exe examples\hello.top
+        .\target\release\topc.exe examples\hello.top
         echo "✅ hello.top executed successfully"
 
     - name: Test verbose mode (Unix)
       if: runner.os != 'Windows'
       run: |
-        ./target/release/top -v examples/hello.top
+        ./target/release/topc -v examples/hello.top
         echo "✅ Verbose mode works"
 
     - name: Test verbose mode (Windows)
       if: runner.os == 'Windows'
       run: |
-        .\target\release\top.exe -v examples\hello.top
+        .\target\release\topc.exe -v examples\hello.top
         echo "✅ Verbose mode works"
 
     - name: Test show-tokens flag (Unix)
       if: runner.os != 'Windows'
       run: |
-        ./target/release/top -t examples/hello.top
+        ./target/release/topc -t examples/hello.top
         echo "✅ Show-tokens flag works"
 
     - name: Test show-tokens flag (Windows)
       if: runner.os == 'Windows'
       run: |
-        .\target\release\top.exe -t examples\hello.top
+        .\target\release\topc.exe -t examples\hello.top
         echo "✅ Show-tokens flag works"
 
     - name: Test show-ast flag (Unix)
       if: runner.os != 'Windows'
       run: |
-        ./target/release/top -a examples/hello.top
+        ./target/release/topc -a examples/hello.top
         echo "✅ Show-ast flag works"
 
     - name: Test show-ast flag (Windows)
       if: runner.os == 'Windows'
       run: |
-        .\target\release\top.exe -a examples\hello.top
+        .\target\release\topc.exe -a examples\hello.top
         echo "✅ Show-ast flag works"
 
   # Check minimum supported Rust version
@@ -157,7 +157,7 @@ jobs:
         echo "Checking all .top example files..."
         find examples -name "*.top" -type f | while read -r file; do
           echo "Testing: $file"
-          ./target/release/top "$file" || exit 1
+          ./target/release/topc "$file" || exit 1
           echo "✅ $file passed"
         done
 
@@ -178,7 +178,7 @@ jobs:
             return 0
         }
         EOF
-        ./target/release/top /tmp/test_arithmetic.top
+        ./target/release/topc /tmp/test_arithmetic.top
         echo "✅ Arithmetic operations test passed"
 
     - name: Create and test control flow example
@@ -201,7 +201,7 @@ jobs:
             return 0
         }
         EOF
-        ./target/release/top /tmp/test_control.top
+        ./target/release/topc /tmp/test_control.top
         echo "✅ Control flow test passed"
 
   # Security audit
@@ -276,15 +276,15 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: top
+            artifact_name: topc
             asset_name: toplang-linux-x64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: top.exe
+            artifact_name: topc.exe
             asset_name: toplang-windows-x64.exe
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: top
+            artifact_name: topc
             asset_name: toplang-macos-x64
 
     steps:

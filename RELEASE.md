@@ -60,7 +60,7 @@ TopLang uses a **fully automated** release pipeline via GitHub Actions. When a n
    cargo build --release
 
    # Test the binary
-   ./target/release/top examples/hello.top
+   ./target/release/topc examples/hello.top
    ```
 
 4. **Commit the changes** (if you updated CHANGELOG.md):

@@ -3,7 +3,7 @@
 
 $RepoOwner = "taufiksoleh"
 $RepoName = "toplang"
-$BinaryName = "top.exe"
+$BinaryName = "topc.exe"
 $InstallDir = "$env:LOCALAPPDATA\Programs\toplang"
 
 function Write-Info {

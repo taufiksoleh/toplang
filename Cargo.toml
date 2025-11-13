@@ -8,7 +8,7 @@ description = "A simple, human-first programming language"
 license = "MIT"
 
 [[bin]]
-name = "top"
+name = "topc"
 path = "src/main.rs"
 
 [dependencies]

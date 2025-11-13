@@ -62,7 +62,7 @@ brew tap taufiksoleh/toplang https://github.com/taufiksoleh/toplang
 brew install toplang
 
 # Verify installation
-top --version
+topc --version
 ```
 
 ### Pre-built Binaries
@@ -77,7 +77,7 @@ Download pre-compiled binaries from the [releases page](https://github.com/taufi
 3. Make it executable (Linux/macOS):
    ```bash
    chmod +x toplang-*
-   mv toplang-* /usr/local/bin/top
+   mv toplang-* /usr/local/bin/topc
    ```
 4. On Windows, add the directory to your PATH
 
@@ -102,7 +102,7 @@ cd toplang
 cargo build --release
 ```
 
-The compiled `top` executable will be in `target/release/top`.
+The compiled `topc` executable will be in `target/release/topc`.
 
 3. Optionally, install it to your system:
 ```bash
@@ -116,17 +116,17 @@ cargo install --path .
 To run a TopLang program:
 
 ```bash
-./target/release/top path/to/your_program.top
+./target/release/topc path/to/your_program.top
 ```
 
 Or if you installed it:
 ```bash
-top path/to/your_program.top
+topc path/to/your_program.top
 ```
 
 ### Command-line Options
 
-The `top` compiler supports several options:
+The `topc` compiler supports several options:
 
 - `-t, --show-tokens` - Display tokens after lexing
 - `-a, --show-ast` - Display the Abstract Syntax Tree after parsing
@@ -136,7 +136,7 @@ The `top` compiler supports several options:
 
 Example:
 ```bash
-top -v examples/hello.top
+topc -v examples/hello.top
 ```
 
 ## Language Syntax
@@ -256,7 +256,7 @@ cargo test
 For faster compilation during development:
 ```bash
 cargo build
-./target/debug/top examples/hello.top
+./target/debug/topc examples/hello.top
 ```
 
 ### Release Build
@@ -264,7 +264,7 @@ cargo build
 For optimized production builds:
 ```bash
 cargo build --release
-./target/release/top examples/hello.top
+./target/release/topc examples/hello.top
 ```
 
 ## Contributing

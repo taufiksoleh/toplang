@@ -15,7 +15,7 @@ use std::path::PathBuf;
 use std::process;
 
 #[derive(ClapParser)]
-#[command(name = "top")]
+#[command(name = "topc")]
 #[command(author = "TopLang Contributors")]
 #[command(version)]
 #[command(about = "TopLang - A simple, human-first programming language", long_about = None)]

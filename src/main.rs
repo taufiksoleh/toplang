@@ -66,10 +66,7 @@ fn run(cli: Cli) -> Result<()> {
     if cli.show_tokens {
         println!("\n{}", "=== Tokens ===".yellow().bold());
         for token in &tokens {
-            println!(
-                "{}:{} - {:?}",
-                token.line, token.column, token.token_type
-            );
+            println!("{}:{} - {:?}", token.line, token.column, token.token_type);
         }
         println!();
     }
@@ -80,9 +77,7 @@ fn run(cli: Cli) -> Result<()> {
     }
 
     let mut parser = Parser::new(tokens);
-    let program = parser
-        .parse()
-        .with_context(|| "Failed to parse program")?;
+    let program = parser.parse().with_context(|| "Failed to parse program")?;
 
     if cli.show_ast {
         println!("\n{}", "=== AST ===".yellow().bold());
@@ -102,7 +97,11 @@ fn run(cli: Cli) -> Result<()> {
         .with_context(|| "Runtime error")?;
 
     if cli.verbose {
-        println!("\n{} {}", "Program exited with code:".blue().bold(), exit_code);
+        println!(
+            "\n{} {}",
+            "Program exited with code:".blue().bold(),
+            exit_code
+        );
     }
 
     process::exit(exit_code);

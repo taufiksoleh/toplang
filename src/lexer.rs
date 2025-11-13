@@ -236,7 +236,11 @@ impl Lexer {
                             if next_ch.is_alphabetic() {
                                 let next_word = self.read_identifier();
                                 if next_word == "by" {
-                                    tokens.push(Token::new(TokenType::Divide, start_line, start_column));
+                                    tokens.push(Token::new(
+                                        TokenType::Divide,
+                                        start_line,
+                                        start_column,
+                                    ));
                                     continue;
                                 }
                             }
@@ -253,7 +257,11 @@ impl Lexer {
                 }
                 _ if ch.is_numeric() => {
                     let number = self.read_number();
-                    tokens.push(Token::new(TokenType::Number(number), start_line, start_column));
+                    tokens.push(Token::new(
+                        TokenType::Number(number),
+                        start_line,
+                        start_column,
+                    ));
                 }
                 _ => {
                     tokens.push(Token::new(TokenType::Unknown, start_line, start_column));

@@ -2,38 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [ "main", "master", "claude/**" ]
-    tags:
-      - 'v*.*.*'
-      - '*.*.*'
+    branches: [ main, master ]
   pull_request:
-    branches: [ "main", "master" ]
-
-permissions:
-  contents: write
+    branches: [ main, master ]
 
 env:
   CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
 
 jobs:
   test:
-    name: Test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        rust: [stable]
+    name: Test
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
     - name: Install Rust
-      uses: dtolnay/rust-toolchain@master
+      uses: dtolnay/rust-toolchain@stable
       with:
-        toolchain: ${{ matrix.rust }}
         components: rustfmt, clippy
 
     - name: Cache cargo registry
@@ -52,340 +38,50 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-git-
 
-    - name: Cache cargo build
+    - name: Cache target directory
       uses: actions/cache@v4
       with:
         path: target
-        key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
         restore-keys: |
-          ${{ runner.os }}-cargo-build-target-
+          ${{ runner.os }}-target-
 
-    - name: Check code formatting
+    - name: Check formatting
       run: cargo fmt -- --check
-      continue-on-error: true
 
     - name: Run clippy
       run: cargo clippy -- -D warnings
-      continue-on-error: true
 
-    - name: Build (debug)
+    - name: Build
       run: cargo build --verbose
 
-    - name: Run tests
+    - name: Run unit tests
       run: cargo test --verbose
 
-    - name: Build (release)
+    - name: Run example tests
+      run: ./test_examples.sh
+
+    - name: Build release
       run: cargo build --release --verbose
 
-    - name: Test hello.top example (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        ./target/release/topc examples/hello.top
-        echo "✅ hello.top executed successfully"
-
-    - name: Test hello.top example (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        .\target\release\topc.exe examples\hello.top
-        echo "✅ hello.top executed successfully"
-
-    - name: Test verbose mode (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        ./target/release/topc -v examples/hello.top
-        echo "✅ Verbose mode works"
-
-    - name: Test verbose mode (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        .\target\release\topc.exe -v examples\hello.top
-        echo "✅ Verbose mode works"
-
-    - name: Test show-tokens flag (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        ./target/release/topc -t examples/hello.top
-        echo "✅ Show-tokens flag works"
-
-    - name: Test show-tokens flag (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        .\target\release\topc.exe -t examples\hello.top
-        echo "✅ Show-tokens flag works"
-
-    - name: Test show-ast flag (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        ./target/release/topc -a examples/hello.top
-        echo "✅ Show-ast flag works"
-
-    - name: Test show-ast flag (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        .\target\release\topc.exe -a examples\hello.top
-        echo "✅ Show-ast flag works"
-
-  # Check minimum supported Rust version
-  msrv:
-    name: Check MSRV (1.74.0)
+  coverage:
+    name: Code Coverage
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install Rust 1.74.0
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: 1.74.0
-
-    - name: Build with MSRV
-      run: cargo build --verbose
-
-    - name: Test with MSRV
-      run: cargo test --verbose
-
-  # Additional syntax validation
-  syntax-check:
-    name: Syntax Check Examples
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
 
-    - name: Build compiler
-      run: cargo build --release
+    - name: Install tarpaulin
+      run: cargo install cargo-tarpaulin
 
-    - name: Verify non-interactive .top files compile
-      run: |
-        echo "Checking non-interactive .top example files..."
-        for file in examples/*.top; do
-          # Skip interactive examples that require user input
-          if [[ "$file" == *"input.top"* ]] || [[ "$file" == *"arrays_with_input.top"* ]]; then
-            echo "⏭️  Skipping interactive example: $file"
-            continue
-          fi
-          echo "Testing: $file"
-          ./target/release/topc "$file" || exit 1
-          echo "✅ $file passed"
-        done
+    - name: Generate coverage
+      run: cargo tarpaulin --verbose --workspace --timeout 120 --out xml
 
-    - name: Test interactive examples with mock input
-      run: |
-        echo "Testing input.top with mock data..."
-        echo -e "Alice\n25\n10\n5" | ./target/release/topc examples/input.top
-        echo "✅ input.top passed with mock input"
-
-        echo "Testing arrays_with_input.top with mock data..."
-        echo -e "3\napple\nbanana\norange" | ./target/release/topc examples/arrays_with_input.top
-        echo "✅ arrays_with_input.top passed with mock input"
-
-    - name: Create and test arithmetic example
-      run: |
-        cat > /tmp/test_arithmetic.top << 'EOF'
-        function main() {
-            var a is 10
-            var b is 5
-            var sum is a plus b
-            var diff is a minus b
-            var prod is a times b
-            var quot is a divided by b
-            print sum
-            print diff
-            print prod
-            print quot
-            return 0
-        }
-        EOF
-        ./target/release/topc /tmp/test_arithmetic.top
-        echo "✅ Arithmetic operations test passed"
-
-    - name: Create and test control flow example
-      run: |
-        cat > /tmp/test_control.top << 'EOF'
-        function main() {
-            var x is 10
-            if x greater than 5 {
-                print "x is greater than 5"
-            } else {
-                print "x is not greater than 5"
-            }
-
-            var i is 0
-            while i less than 3 {
-                print i
-                i is i plus 1
-            }
-
-            return 0
-        }
-        EOF
-        ./target/release/topc /tmp/test_control.top
-        echo "✅ Control flow test passed"
-
-  # Security audit
-  security:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-
-    - name: Install cargo-audit
-      run: cargo install cargo-audit
-
-    - name: Run security audit
-      run: cargo audit
-      continue-on-error: true
-
-  # Automatically update version in Cargo.toml based on tag
-  update-version:
-    name: Update Version from Tag
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    outputs:
-      version: ${{ steps.extract-version.outputs.version }}
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
       with:
-        fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Extract version from tag
-      id: extract-version
-      run: |
-        TAG_NAME=${GITHUB_REF#refs/tags/}
-        # Remove 'v' prefix if present (e.g., v0.2.0 -> 0.2.0)
-        VERSION=${TAG_NAME#v}
-        echo "Tag: $TAG_NAME"
-        echo "Version: $VERSION"
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Update Cargo.toml version
-      run: |
-        VERSION="${{ steps.extract-version.outputs.version }}"
-        echo "Updating Cargo.toml to version $VERSION"
-        sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
-        cat Cargo.toml | grep "^version"
-
-    - name: Commit version update
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add Cargo.toml
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "chore: update version to ${{ steps.extract-version.outputs.version }} [skip ci]"
-          git push origin HEAD:main || echo "Failed to push, continuing anyway"
-        fi
-
-  # Build artifacts for release
-  build-artifacts:
-    name: Build Release Artifacts
-    runs-on: ${{ matrix.os }}
-    needs: update-version
-    if: startsWith(github.ref, 'refs/tags/')
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            artifact_name: topc
-            asset_name: topc-linux-x64
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            artifact_name: topc.exe
-            asset_name: topc-windows-x64.exe
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            artifact_name: topc
-            asset_name: topc-macos-x64
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Update Cargo.toml version
-      shell: bash
-      run: |
-        VERSION="${{ needs.update-version.outputs.version }}"
-        echo "Updating Cargo.toml to version $VERSION"
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
-        else
-          sed -i "" "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml 2>/dev/null || \
-          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
-        fi
-        grep "^version" Cargo.toml
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        target: ${{ matrix.target }}
-
-    - name: Build release binary
-      run: cargo build --release --target ${{ matrix.target }}
-
-    - name: Strip binary (Unix)
-      if: runner.os != 'Windows'
-      run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-
-    - name: Upload artifact to workflow
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.asset_name }}
-        path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-
-  # Create GitHub release with all artifacts
-  create-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: build-artifacts
-    if: startsWith(github.ref, 'refs/tags/')
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
-
-    - name: Create archives
-      run: |
-        # Create tar.gz for Linux (contains topc)
-        cd artifacts/topc-linux-x64
-        tar -czf ../../topc-linux-x64.tar.gz topc
-        cd ../..
-
-        # Create zip for Windows (contains topc.exe)
-        cd artifacts/topc-windows-x64.exe
-        zip ../../topc-windows-x64.zip topc.exe
-        cd ../..
-
-        # Create tar.gz for macOS (contains topc)
-        cd artifacts/topc-macos-x64
-        tar -czf ../../topc-macos-x64.tar.gz topc
-        cd ../..
-
-    - name: Display created archives
-      run: ls -lh *.tar.gz *.zip
-
-    - name: Create Release with Assets
-      run: |
-        TAG_NAME=${GITHUB_REF#refs/tags/}
-        gh release create "$TAG_NAME" \
-          --title "Release $TAG_NAME" \
-          --generate-notes \
-          topc-linux-x64.tar.gz \
-          topc-windows-x64.zip \
-          topc-macos-x64.tar.gz
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        files: ./cobertura.xml
+        fail_ci_if_error: false

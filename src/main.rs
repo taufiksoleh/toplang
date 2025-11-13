@@ -10,6 +10,7 @@ mod parser;
 mod peephole;
 mod token;
 mod vm;
+mod vm_nanbox;
 mod vm_optimized;
 mod vm_threaded;
 
@@ -24,6 +25,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process;
 use vm::VM;
+use vm_nanbox::NanBoxVM;
 use vm_optimized::OptimizedVM;
 use vm_threaded::ThreadedVM;
 
@@ -60,6 +62,10 @@ struct Cli {
     /// Debug VM execution (requires --bytecode)
     #[arg(long)]
     debug_vm: bool,
+
+    /// Use NaN-boxed VM for maximum performance (requires --bytecode)
+    #[arg(long)]
+    nanbox: bool,
 }
 
 fn main() {
@@ -132,18 +138,34 @@ fn run(cli: Cli) -> Result<()> {
             println!();
         }
 
-        // Execute with VM (using optimized VM with inline caching and reduced cloning)
-        if cli.verbose {
-            println!("{}", "Executing with optimized VM...".blue().bold());
-            println!();
-        }
+        // Execute with VM - choose between NaN-boxed or standard optimized VM
+        if cli.nanbox {
+            // Use NaN-boxed VM for maximum performance
+            if cli.verbose {
+                println!("{}", "Executing with NaN-boxed VM (maximum performance)...".blue().bold());
+                println!();
+            }
 
-        let mut vm = OptimizedVM::new();
-        if cli.debug_vm {
-            vm.set_debug(true);
-        }
+            let mut vm = NanBoxVM::new();
+            if cli.debug_vm {
+                vm.set_debug(true);
+            }
 
-        vm.execute(chunk).with_context(|| "VM runtime error")?
+            vm.execute(chunk).with_context(|| "NaN-boxed VM runtime error")?
+        } else {
+            // Use standard optimized VM
+            if cli.verbose {
+                println!("{}", "Executing with optimized VM...".blue().bold());
+                println!();
+            }
+
+            let mut vm = OptimizedVM::new();
+            if cli.debug_vm {
+                vm.set_debug(true);
+            }
+
+            vm.execute(chunk).with_context(|| "VM runtime error")?
+        }
     } else {
         // Use traditional tree-walking interpreter
         if cli.verbose {

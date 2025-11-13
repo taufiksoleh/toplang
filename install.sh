@@ -6,7 +6,7 @@ set -e
 
 REPO_OWNER="taufiksoleh"
 REPO_NAME="toplang"
-BINARY_NAME="top"
+BINARY_NAME="topc"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
 
 # Colors for output
@@ -73,7 +73,7 @@ install_toplang() {
     # Construct the asset name based on OS
     if [ "$OS" = "windows" ]; then
         ASSET_NAME="toplang-windows-${ARCH}.exe"
-        BINARY_NAME="top.exe"
+        BINARY_NAME="topc.exe"
     elif [ "$OS" = "linux" ]; then
         ASSET_NAME="toplang-linux-${ARCH}"
     elif [ "$OS" = "macos" ]; then

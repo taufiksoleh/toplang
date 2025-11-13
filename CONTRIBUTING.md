@@ -58,7 +58,7 @@ cargo test --verbose
 ### Testing Your Changes
 
 1. Build the compiler: `cargo build --release`
-2. Test with example: `./target/release/top examples/hello.top`
+2. Test with example: `./target/release/topc examples/hello.top`
 3. Test with your own .top files
 
 ### Adding New Tests
@@ -92,7 +92,7 @@ When adding new language features:
 
 When reporting bugs, please include:
 
-- TopLang version (run `top --version`)
+- TopLang version (run `topc --version`)
 - Operating system and version
 - Rust version (run `rustc --version`)
 - Steps to reproduce the bug

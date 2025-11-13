@@ -25,10 +25,10 @@ class Toplang < Formula
   end
 
   def install
-    bin.install "toplang-macos-x64" => "top" if OS.mac? && Hardware::CPU.intel?
-    bin.install "toplang-macos-arm64" => "top" if OS.mac? && Hardware::CPU.arm?
-    bin.install "toplang-linux-x64" => "top" if OS.linux? && Hardware::CPU.intel?
-    bin.install "toplang-linux-arm64" => "top" if OS.linux? && Hardware::CPU.arm?
+    bin.install "toplang-macos-x64" => "topc" if OS.mac? && Hardware::CPU.intel?
+    bin.install "toplang-macos-arm64" => "topc" if OS.mac? && Hardware::CPU.arm?
+    bin.install "toplang-linux-x64" => "topc" if OS.linux? && Hardware::CPU.intel?
+    bin.install "toplang-linux-arm64" => "topc" if OS.linux? && Hardware::CPU.arm?
   end
 
   test do
@@ -41,7 +41,7 @@ class Toplang < Formula
     EOS
 
     # Run the test program
-    output = shell_output("#{bin}/top #{testpath}/test.top")
+    output = shell_output("#{bin}/topc #{testpath}/test.top")
     assert_match "Hello from TopLang", output
   end
 end

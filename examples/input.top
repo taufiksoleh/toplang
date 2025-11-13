@@ -1,0 +1,46 @@
+# User input example
+
+function main() {
+    print "=== User Input Example ==="
+
+    # Ask for user's name with a prompt
+    ask name "What is your name? "
+    print "Hello, "
+    print name
+    print "!"
+
+    # Ask for user's age
+    ask age "How old are you? "
+    print "You are "
+    print age
+    print " years old."
+
+    # Check if they're an adult
+    if age greater than 18 {
+        print "You are an adult!"
+    } else {
+        print "You are a minor."
+    }
+
+    # Simple calculator
+    print ""
+    print "=== Simple Calculator ==="
+    ask num1 "Enter first number: "
+    ask num2 "Enter second number: "
+
+    var sum is num1 plus num2
+    var difference is num1 minus num2
+    var product is num1 times num2
+    var quotient is num1 divided by num2
+
+    print "Sum: "
+    print sum
+    print "Difference: "
+    print difference
+    print "Product: "
+    print product
+    print "Quotient: "
+    print quotient
+
+    return 0
+}

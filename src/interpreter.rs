@@ -8,6 +8,7 @@ pub enum Value {
     Number(f64),
     String(String),
     Boolean(bool),
+    Array(Vec<Value>),
     Null,
 }
 
@@ -17,6 +18,7 @@ impl Value {
             Value::Boolean(b) => *b,
             Value::Number(n) => *n != 0.0,
             Value::String(s) => !s.is_empty(),
+            Value::Array(a) => !a.is_empty(),
             Value::Null => false,
         }
     }
@@ -34,6 +36,16 @@ impl fmt::Display for Value {
             }
             Value::String(s) => write!(f, "{}", s),
             Value::Boolean(b) => write!(f, "{}", b),
+            Value::Array(arr) => {
+                write!(f, "[")?;
+                for (i, val) in arr.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", val)?;
+                }
+                write!(f, "]")
+            }
             Value::Null => write!(f, "null"),
         }
     }
@@ -126,9 +138,66 @@ impl Interpreter {
                 self.set_variable(name.clone(), val);
                 Ok(())
             }
+            Stmt::IndexAssignment {
+                array,
+                index,
+                value,
+            } => {
+                let index_val = self.eval_expr(index)?;
+                let new_val = self.eval_expr(value)?;
+
+                // Get the array identifier
+                if let Expr::Identifier(name) = array.as_ref() {
+                    let mut arr_val = self.get_variable(name)?;
+
+                    if let Value::Array(ref mut arr) = arr_val {
+                        if let Value::Number(idx) = index_val {
+                            let idx = idx as usize;
+                            if idx < arr.len() {
+                                arr[idx] = new_val;
+                                self.set_variable(name.clone(), arr_val);
+                                Ok(())
+                            } else {
+                                Err(anyhow!("Array index out of bounds: {}", idx))
+                            }
+                        } else {
+                            Err(anyhow!("Array index must be a number"))
+                        }
+                    } else {
+                        Err(anyhow!("Cannot index non-array value"))
+                    }
+                } else {
+                    Err(anyhow!("Can only assign to array variables"))
+                }
+            }
             Stmt::Print(expr) => {
                 let val = self.eval_expr(expr)?;
                 println!("{}", val);
+                Ok(())
+            }
+            Stmt::Ask { name, prompt } => {
+                use std::io::{self, Write};
+
+                // Print prompt if provided
+                if let Some(prompt_expr) = prompt {
+                    let prompt_val = self.eval_expr(prompt_expr)?;
+                    print!("{}", prompt_val);
+                    io::stdout().flush()?;
+                }
+
+                // Read user input
+                let mut input = String::new();
+                io::stdin().read_line(&mut input)?;
+                let input = input.trim().to_string();
+
+                // Try to parse as number, otherwise store as string
+                let value = if let Ok(num) = input.parse::<f64>() {
+                    Value::Number(num)
+                } else {
+                    Value::String(input)
+                };
+
+                self.set_variable(name.clone(), value);
                 Ok(())
             }
             Stmt::If {
@@ -237,6 +306,30 @@ impl Interpreter {
                     args.iter().map(|arg| self.eval_expr(arg)).collect();
 
                 self.call_function(&func, arg_values?)
+            }
+            Expr::Array(elements) => {
+                let values: Result<Vec<Value>> =
+                    elements.iter().map(|e| self.eval_expr(e)).collect();
+                Ok(Value::Array(values?))
+            }
+            Expr::Index { array, index } => {
+                let arr_val = self.eval_expr(array)?;
+                let idx_val = self.eval_expr(index)?;
+
+                if let Value::Array(arr) = arr_val {
+                    if let Value::Number(idx) = idx_val {
+                        let idx = idx as usize;
+                        if idx < arr.len() {
+                            Ok(arr[idx].clone())
+                        } else {
+                            Err(anyhow!("Array index out of bounds: {}", idx))
+                        }
+                    } else {
+                        Err(anyhow!("Array index must be a number"))
+                    }
+                } else {
+                    Err(anyhow!("Cannot index non-array value"))
+                }
             }
         }
     }

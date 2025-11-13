@@ -5,6 +5,7 @@
 
 use crate::ast::*;
 use crate::bytecode::*;
+use crate::optimizer;
 use anyhow::{anyhow, Result};
 
 /// Local variable information
@@ -38,8 +39,11 @@ impl Compiler {
 
     /// Compile a program (multiple functions) into bytecode
     pub fn compile(&mut self, program: Program) -> Result<Chunk> {
-        // First pass: compile all functions
-        for function in &program.functions {
+        // First: optimize the program (constant folding, etc.)
+        let optimized_program = optimizer::optimize_program(&program);
+
+        // Then compile all functions
+        for function in &optimized_program.functions {
             let func_chunk = self.compile_function(function)?;
             self.chunk.functions.insert(function.name.clone(), func_chunk);
         }

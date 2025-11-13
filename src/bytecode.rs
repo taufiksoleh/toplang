@@ -40,6 +40,22 @@ pub enum Instruction {
     /// Negate top of stack
     Negate,
 
+    // Fast Integer Operations (no type checking, for known integers)
+    /// Pop two integers, add them, push result (fast path)
+    AddInt,
+
+    /// Pop two integers, subtract them, push result (fast path)
+    SubInt,
+
+    /// Pop two integers, multiply them, push result (fast path)
+    MulInt,
+
+    /// Pop two integers, compare less than, push boolean (fast path)
+    LessInt,
+
+    /// Pop integer, increment by 1 (extremely fast for loop counters)
+    IncrementInt,
+
     // Comparison Operations
     /// Pop two values, compare equality, push boolean
     Equal,
@@ -229,6 +245,11 @@ impl Chunk {
             Instruction::Divide => println!("Divide"),
             Instruction::Modulo => println!("Modulo"),
             Instruction::Negate => println!("Negate"),
+            Instruction::AddInt => println!("AddInt"),
+            Instruction::SubInt => println!("SubInt"),
+            Instruction::MulInt => println!("MulInt"),
+            Instruction::LessInt => println!("LessInt"),
+            Instruction::IncrementInt => println!("IncrementInt"),
             Instruction::Equal => println!("Equal"),
             Instruction::NotEqual => println!("NotEqual"),
             Instruction::Greater => println!("Greater"),

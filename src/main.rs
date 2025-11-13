@@ -3,6 +3,7 @@ mod bytecode;
 mod compiler;
 mod interpreter;
 mod lexer;
+mod optimizer;
 mod parser;
 mod token;
 mod vm;

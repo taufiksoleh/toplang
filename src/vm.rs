@@ -241,6 +241,37 @@ impl VM {
                     self.push(Value::Number(-a));
                 }
 
+                // Fast integer operations - no type checking
+                Instruction::AddInt => {
+                    if let (Value::Number(b), Value::Number(a)) = (self.pop(), self.pop()) {
+                        self.push(Value::Number(a + b));
+                    }
+                }
+
+                Instruction::SubInt => {
+                    if let (Value::Number(b), Value::Number(a)) = (self.pop(), self.pop()) {
+                        self.push(Value::Number(a - b));
+                    }
+                }
+
+                Instruction::MulInt => {
+                    if let (Value::Number(b), Value::Number(a)) = (self.pop(), self.pop()) {
+                        self.push(Value::Number(a * b));
+                    }
+                }
+
+                Instruction::LessInt => {
+                    if let (Value::Number(b), Value::Number(a)) = (self.pop(), self.pop()) {
+                        self.push(Value::Boolean(a < b));
+                    }
+                }
+
+                Instruction::IncrementInt => {
+                    if let Value::Number(a) = self.pop() {
+                        self.push(Value::Number(a + 1.0));
+                    }
+                }
+
                 Instruction::Equal => {
                     let b = self.pop();
                     let a = self.pop();

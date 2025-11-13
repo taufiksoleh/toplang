@@ -4,6 +4,7 @@ mod compiler;
 mod interpreter;
 mod lexer;
 mod nanbox;
+mod nanbox_safe;
 mod optimizer;
 mod parser;
 mod peephole;

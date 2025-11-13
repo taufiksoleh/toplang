@@ -10,9 +10,13 @@ TopLang is a simple, expressive programming language with natural English-like s
 ## Features
 
 ✨ **Human-Readable Syntax** - Use natural English words instead of symbols
+
 🚀 **Fast** - Written in Rust for blazing fast performance
+
 🌍 **Cross-Platform** - Works on Windows, macOS, and Linux
+
 🎯 **Simple** - Easy to learn and understand
+
 🛠️ **Modern** - Built with modern language design principles
 
 ## Installation

@@ -20,14 +20,8 @@ pub enum TokenType {
     Divide,
     Assign,
     Equals,
-    #[allow(dead_code)]
-    NotEquals,
     Greater,
     Less,
-    #[allow(dead_code)]
-    GreaterEquals,
-    #[allow(dead_code)]
-    LessEquals,
     And,
     Or,
     Not,
@@ -46,10 +40,6 @@ pub enum TokenType {
     Boolean(bool),
 
     // Special
-    #[allow(dead_code)]
-    Comment,
-    #[allow(dead_code)]
-    Eol,
     Eof,
     Unknown,
 }
@@ -89,11 +79,8 @@ impl fmt::Display for TokenType {
             TokenType::Divide => write!(f, "divided"),
             TokenType::Assign => write!(f, "is"),
             TokenType::Equals => write!(f, "equals"),
-            TokenType::NotEquals => write!(f, "not equals"),
             TokenType::Greater => write!(f, "greater"),
             TokenType::Less => write!(f, "less"),
-            TokenType::GreaterEquals => write!(f, "greater equals"),
-            TokenType::LessEquals => write!(f, "less equals"),
             TokenType::And => write!(f, "and"),
             TokenType::Or => write!(f, "or"),
             TokenType::Not => write!(f, "not"),
@@ -106,8 +93,6 @@ impl fmt::Display for TokenType {
             TokenType::Number(n) => write!(f, "number {}", n),
             TokenType::StringLit(s) => write!(f, "string \"{}\"", s),
             TokenType::Boolean(b) => write!(f, "boolean {}", b),
-            TokenType::Comment => write!(f, "comment"),
-            TokenType::Eol => write!(f, "end of line"),
             TokenType::Eof => write!(f, "end of file"),
             TokenType::Unknown => write!(f, "unknown"),
         }

@@ -347,14 +347,21 @@ jobs:
     - name: Display created archives
       run: ls -lh *.tar.gz *.zip
 
-    - name: Create GitHub Release with all binaries
+    - name: Create Draft Release and Upload Assets
       uses: softprops/action-gh-release@v1
       with:
         files: |
           topc-linux-x64.tar.gz
           topc-windows-x64.zip
           topc-macos-x64.tar.gz
-        draft: false
+        draft: true
         prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Publish Release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

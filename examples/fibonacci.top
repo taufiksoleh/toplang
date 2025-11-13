@@ -1,0 +1,23 @@
+# Fibonacci sequence example
+
+function main() {
+    print "=== Fibonacci Sequence ==="
+    print "First 10 Fibonacci numbers:"
+
+    var n is 10
+    var a is 0
+    var b is 1
+    var count is 0
+
+    while count less than n {
+        print a
+
+        var temp is a
+        a is b
+        b is temp plus b
+
+        count is count plus 1
+    }
+
+    return 0
+}

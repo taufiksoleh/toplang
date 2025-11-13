@@ -1,5 +1,10 @@
 # TopLang - A Simple, Human-First Programming Language
 
+[![CI](https://github.com/taufiksoleh/toplang/workflows/CI/badge.svg)](https://github.com/taufiksoleh/toplang/actions/workflows/ci.yml)
+[![Code Quality](https://github.com/taufiksoleh/toplang/workflows/Code%20Quality/badge.svg)](https://github.com/taufiksoleh/toplang/actions/workflows/quality.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)](https://www.rust-lang.org/)
+
 TopLang is a simple, expressive programming language with natural English-like syntax. It's designed to be easy to learn while being powerful enough to write useful programs. Built with Rust for maximum performance and cross-platform compatibility.
 
 ## Features

@@ -5,6 +5,7 @@ mod interpreter;
 mod lexer;
 mod optimizer;
 mod parser;
+mod peephole;
 mod token;
 mod vm;
 

@@ -5,6 +5,7 @@
 use crate::ast::*;
 use crate::bytecode::*;
 use crate::optimizer;
+use crate::peephole;
 use anyhow::{anyhow, Result};
 
 /// Local variable information
@@ -52,6 +53,9 @@ impl Compiler {
         // Generate main entry point that calls main()
         self.chunk.emit(Instruction::Call("main".to_string(), 0), 1);
         self.chunk.emit(Instruction::Halt, 1);
+
+        // Apply peephole optimizations
+        peephole::optimize_chunk(&mut self.chunk);
 
         Ok(self.chunk.clone())
     }

@@ -17,7 +17,7 @@ use std::process;
 #[derive(ClapParser)]
 #[command(name = "top")]
 #[command(author = "TopLang Contributors")]
-#[command(version = "0.1.0")]
+#[command(version)]
 #[command(about = "TopLang - A simple, human-first programming language", long_about = None)]
 struct Cli {
     /// The TopLang source file to compile and run

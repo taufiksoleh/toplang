@@ -260,26 +260,33 @@ impl Lexer {
                         || identifier == "mod"
                         || identifier == "remainder"
                     {
-                        // For modulo/mod/remainder, optionally consume "by" if present
+                        // Only treat as modulo operator if followed by "by"
                         let saved_pos = self.position;
                         let saved_line = self.line;
                         let saved_column = self.column;
 
                         self.skip_whitespace();
+                        let mut is_modulo_operator = false;
+
                         if let Some(next_ch) = self.current_char() {
                             if next_ch.is_alphabetic() {
                                 let next_word = self.read_identifier();
-                                if next_word != "by" {
+                                if next_word == "by" {
+                                    is_modulo_operator = true;
+                                } else {
                                     // Not "by", restore position
                                     self.position = saved_pos;
                                     self.line = saved_line;
                                     self.column = saved_column;
                                 }
-                                // If it was "by", we consumed it and continue
                             }
                         }
-                        tokens.push(Token::new(TokenType::Modulo, start_line, start_column));
-                        continue;
+
+                        if is_modulo_operator {
+                            tokens.push(Token::new(TokenType::Modulo, start_line, start_column));
+                            continue;
+                        }
+                        // Otherwise fall through to treat as identifier
                     }
 
                     let token_type = if let Some(keyword_type) = self.keywords.get(&identifier) {

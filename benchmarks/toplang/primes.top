@@ -1,0 +1,33 @@
+# Prime numbers benchmark - count primes up to N
+
+function main() {
+    var limit is 50000
+    var count is 0
+    var num is 2
+
+    while num less than limit {
+        var is_prime is 1
+        var i is 2
+
+        # Check if num is prime
+        while i times i less than num plus 1 {
+            var remainder is num modulo by i
+            if remainder equals 0 {
+                is_prime is 0
+                i is num
+            }
+            i is i plus 1
+        }
+
+        if is_prime equals 1 {
+            count is count plus 1
+        }
+
+        num is num plus 1
+    }
+
+    print "Prime count:"
+    print count
+
+    return 0
+}

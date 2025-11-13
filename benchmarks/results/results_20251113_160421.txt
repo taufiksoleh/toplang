@@ -1,0 +1,5 @@
+TopLang vs Python Benchmark Results
+Generated: Thu Nov 13 16:04:21 UTC 2025
+========================================
+
+fibonacci: TopLang=.548s, Python=.136s, Speedup=.24x

@@ -1,0 +1,26 @@
+# Factorial benchmark - calculate multiple factorials with modulo
+
+function main() {
+    var n is 5000
+    var count is 0
+    var modval is 1000000007
+
+    while count less than n {
+        var result is 1
+        var i is 1
+
+        # Calculate factorial with modulo
+        while i less than count plus 1 {
+            var prod is result times i
+            result is prod modulo by modval
+            i is i plus 1
+        }
+
+        count is count plus 1
+    }
+
+    print "Factorial iterations:"
+    print count
+
+    return 0
+}

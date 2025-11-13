@@ -1,0 +1,18 @@
+# Array operations benchmark - sum large array
+
+function main() {
+    var size is 5000000
+    var sum is 0
+    var i is 0
+
+    # Create and sum array
+    while i less than size {
+        sum is sum plus i
+        i is i plus 1
+    }
+
+    print "Array sum:"
+    print sum
+
+    return 0
+}

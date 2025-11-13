@@ -1,0 +1,22 @@
+# Fibonacci benchmark - calculate first N fibonacci numbers with modulo
+
+function main() {
+    var n is 1000000
+    var a is 0
+    var b is 1
+    var count is 0
+    var modval is 1000000007
+
+    while count less than n {
+        var temp is a
+        a is b
+        var sum is temp plus b
+        b is sum modulo by modval
+        count is count plus 1
+    }
+
+    print "Fibonacci result (mod 1e9+7):"
+    print a
+
+    return 0
+}

@@ -1,0 +1,13 @@
+TopLang vs Python Benchmark Results
+Generated: Thu Nov 13 16:13:36 UTC 2025
+========================================
+
+fibonacci: TopLang=.537s, Python=.131s, Speedup=.24x
+primes: TopLang=.475s, Python=.180s, Speedup=.37x
+array_sum: TopLang=1.331s, Python=.326s, Speedup=.24x
+nested_loops: TopLang=1.148s, Python=.303s, Speedup=.26x
+factorial: TopLang=5.552s, Python=1.202s, Speedup=.21x
+
+Summary:
+--------
+Total benchmarks: 5

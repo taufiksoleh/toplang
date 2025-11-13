@@ -230,11 +230,23 @@ jobs:
     - name: Create Release with Assets
       run: |
         TAG_NAME=${GITHUB_REF#refs/tags/}
-        gh release create "$TAG_NAME" \
-          --title "Release $TAG_NAME" \
-          --generate-notes \
-          topc-linux-x64.tar.gz \
-          topc-windows-x64.zip \
-          topc-macos-x64.tar.gz
+
+        # Check if release already exists
+        if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+          echo "Release $TAG_NAME already exists. Uploading assets to existing release..."
+          gh release upload "$TAG_NAME" \
+            topc-linux-x64.tar.gz \
+            topc-windows-x64.zip \
+            topc-macos-x64.tar.gz \
+            --clobber
+        else
+          echo "Creating new release $TAG_NAME..."
+          gh release create "$TAG_NAME" \
+            --title "Release $TAG_NAME" \
+            --generate-notes \
+            topc-linux-x64.tar.gz \
+            topc-windows-x64.zip \
+            topc-macos-x64.tar.gz
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

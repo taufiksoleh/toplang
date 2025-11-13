@@ -1,0 +1,9 @@
+TopLang Interpreter vs VM vs Python Benchmark Results
+Generated: Thu Nov 13 17:15:52 UTC 2025
+========================================
+
+fibonacci: Interpreter=.558s, VM=.207s, Python=.135s, VM_Speedup=2.69x, vs_Python=.65x
+primes: Interpreter=.470s, VM=.271s, Python=.171s, VM_Speedup=1.73x, vs_Python=.63x
+array_sum: Interpreter=1.322s, VM=.573s, Python=.327s, VM_Speedup=2.30x, vs_Python=.57x
+nested_loops: Interpreter=1.100s, VM=.573s, Python=.295s, VM_Speedup=1.91x, vs_Python=.51x
+factorial: Interpreter=5.270s, VM=2.755s, Python=1.154s, VM_Speedup=1.91x, vs_Python=.41x

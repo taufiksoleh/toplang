@@ -3,11 +3,14 @@ mod bytecode;
 mod compiler;
 mod interpreter;
 mod lexer;
+mod nanbox;
 mod optimizer;
 mod parser;
 mod peephole;
 mod token;
 mod vm;
+mod vm_optimized;
+mod vm_threaded;
 
 use anyhow::{Context, Result};
 use clap::Parser as ClapParser;
@@ -20,6 +23,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::process;
 use vm::VM;
+use vm_optimized::OptimizedVM;
+use vm_threaded::ThreadedVM;
 
 #[derive(ClapParser)]
 #[command(name = "topc")]
@@ -126,13 +131,13 @@ fn run(cli: Cli) -> Result<()> {
             println!();
         }
 
-        // Execute with VM
+        // Execute with VM (using optimized VM with inline caching and reduced cloning)
         if cli.verbose {
-            println!("{}", "Executing with VM...".blue().bold());
+            println!("{}", "Executing with optimized VM...".blue().bold());
             println!();
         }
 
-        let mut vm = VM::new();
+        let mut vm = OptimizedVM::new();
         if cli.debug_vm {
             vm.set_debug(true);
         }

@@ -101,6 +101,20 @@ for bench_name in "${!bench_files[@]}"; do
     read -r avg_n min_n max_n <<< $(run_bench "./target/release/topc $bench_file --bytecode --nanbox" $RUNS)
     echo "${avg_n}ms"
 
+    # Native (if available)
+    native_file="benchmarks/native/${bench_name}"
+    if [ -f "$native_file" ]; then
+        echo -n "   Native (Rust)... "
+        read -r avg_nat min_nat max_nat <<< $(run_bench "$native_file" $RUNS)
+        echo "${avg_nat}ms"
+        has_native=true
+    else
+        avg_nat=0
+        min_nat=0
+        max_nat=0
+        has_native=false
+    fi
+
     # Python (if available)
     python_file="benchmarks/python/${bench_name}.py"
     if [ -f "$python_file" ] && command -v python3 &> /dev/null; then
@@ -119,6 +133,14 @@ for bench_name in "${!bench_files[@]}"; do
     speedup_bytecode=$(echo "scale=3; $avg_i / $avg_b" | bc | awk '{printf "%.3f", $0}')
     speedup_nanbox=$(echo "scale=3; $avg_b / $avg_n" | bc | awk '{printf "%.3f", $0}')
     speedup_total=$(echo "scale=3; $avg_i / $avg_n" | bc | awk '{printf "%.3f", $0}')
+
+    if [ "$has_native" = true ] && [ "$avg_nat" != "0" ]; then
+        vs_native=$(echo "scale=3; $avg_n / $avg_nat" | bc | awk '{printf "%.3f", $0}')
+        native_json="\"native\": { \"avg_ms\": $avg_nat, \"min_ms\": $min_nat, \"max_ms\": $max_nat },"
+    else
+        vs_native="0.000"
+        native_json=""
+    fi
 
     if [ "$has_python" = true ]; then
         vs_python=$(echo "scale=3; $avg_n / $avg_p" | bc | awk '{printf "%.3f", $0}')
@@ -140,11 +162,13 @@ for bench_name in "${!bench_files[@]}"; do
       "interpreter": { "avg_ms": $avg_i, "min_ms": $min_i, "max_ms": $max_i },
       "bytecode": { "avg_ms": $avg_b, "min_ms": $min_b, "max_ms": $max_b },
       "nanbox": { "avg_ms": $avg_n, "min_ms": $min_n, "max_ms": $max_n },
+      $native_json
       $python_json
       "speedups": {
         "bytecode_vs_interp": $speedup_bytecode,
         "nanbox_vs_bytecode": $speedup_nanbox,
         "nanbox_vs_interp": $speedup_total,
+        "nanbox_vs_native": $vs_native,
         "nanbox_vs_python": $vs_python
       }
     }

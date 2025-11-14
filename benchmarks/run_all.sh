@@ -94,6 +94,15 @@ for bench_config in "${BENCHMARKS[@]}"; do
     echo -e "${GREEN}${time_nanbox}ms${NC}"
     results["${name}_nanbox"]=$time_nanbox
 
+    # Native (Rust)
+    native_file="benchmarks/native/$name"
+    if [ -f "$native_file" ]; then
+        echo -n "   Native (Rust)...         "
+        time_native=$(run_benchmark "$native_file" $RUNS)
+        echo -e "${GREEN}${time_native}ms${NC}"
+        results["${name}_native"]=$time_native
+    fi
+
     # Python
     if [ "$RUN_PYTHON" = true ] && [ -f "$python_file" ]; then
         echo -n "   Python 3...              "
@@ -112,9 +121,9 @@ echo "╚═══════════════════════�
 echo ""
 
 # Print results table
-printf "┌─────────────────┬──────────┬──────────┬──────────┬──────────┐\n"
-printf "│ %-15s │ %-8s │ %-8s │ %-8s │ %-8s │\n" "Benchmark" "Interp" "Bytecode" "NanBox" "Python"
-printf "├─────────────────┼──────────┼──────────┼──────────┼──────────┤\n"
+printf "┌─────────────────┬──────────┬──────────┬──────────┬──────────┬──────────┐\n"
+printf "│ %-15s │ %-8s │ %-8s │ %-8s │ %-8s │ %-8s │\n" "Benchmark" "Interp" "Bytecode" "NanBox" "Native" "Python"
+printf "├─────────────────┼──────────┼──────────┼──────────┼──────────┼──────────┤\n"
 
 for bench_config in "${BENCHMARKS[@]}"; do
     IFS=':' read -r name _ _ <<< "$bench_config"
@@ -122,13 +131,14 @@ for bench_config in "${BENCHMARKS[@]}"; do
     interp="${results[${name}_interp]:-N/A}"
     bytecode="${results[${name}_bytecode]:-N/A}"
     nanbox="${results[${name}_nanbox]:-N/A}"
+    native="${results[${name}_native]:-N/A}"
     python="${results[${name}_python]:-N/A}"
 
-    printf "│ %-15s │ %6sms │ %6sms │ %6sms │ %6sms │\n" \
-        "$name" "$interp" "$bytecode" "$nanbox" "$python"
+    printf "│ %-15s │ %6sms │ %6sms │ %6sms │ %6sms │ %6sms │\n" \
+        "$name" "$interp" "$bytecode" "$nanbox" "$native" "$python"
 done
 
-printf "└─────────────────┴──────────┴──────────┴──────────┴──────────┘\n"
+printf "└─────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┘\n"
 echo ""
 
 # Calculate and display speedups
@@ -137,13 +147,14 @@ echo "║                  Speedup Analysis                         ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo ""
 
-printf "┌─────────────────┬──────────────┬──────────────┬──────────────┐\n"
-printf "│ %-15s │ %-12s │ %-12s │ %-12s │\n" "Benchmark" "Byte/Interp" "NanBox/Byte" "NanBox/Python"
-printf "├─────────────────┼──────────────┼──────────────┼──────────────┤\n"
+printf "┌─────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐\n"
+printf "│ %-15s │ %-12s │ %-12s │ %-12s │ %-12s │\n" "Benchmark" "Byte/Interp" "NanBox/Byte" "NanBox/Native" "NanBox/Python"
+printf "├─────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤\n"
 
 total_speedup1=0
 total_speedup2=0
 total_speedup3=0
+total_speedup4=0
 count=0
 
 for bench_config in "${BENCHMARKS[@]}"; do
@@ -152,6 +163,7 @@ for bench_config in "${BENCHMARKS[@]}"; do
     interp="${results[${name}_interp]}"
     bytecode="${results[${name}_bytecode]}"
     nanbox="${results[${name}_nanbox]}"
+    native="${results[${name}_native]}"
     python="${results[${name}_python]}"
 
     if [ -n "$interp" ] && [ -n "$bytecode" ] && [ "$interp" != "N/A" ] && [ "$bytecode" != "N/A" ]; then
@@ -166,16 +178,24 @@ for bench_config in "${BENCHMARKS[@]}"; do
         speedup2="N/A"
     fi
 
-    if [ -n "$nanbox" ] && [ -n "$python" ] && [ "$nanbox" != "N/A" ] && [ "$python" != "N/A" ]; then
-        speedup3=$(echo "scale=2; $nanbox / $python" | bc | awk '{printf "%.2f", $0}')
-        percent=$(echo "scale=1; ($nanbox / $python) * 100" | bc | awk '{printf "%.1f", $0}')
+    if [ -n "$nanbox" ] && [ -n "$native" ] && [ "$nanbox" != "N/A" ] && [ "$native" != "N/A" ]; then
+        speedup3=$(echo "scale=2; $nanbox / $native" | bc | awk '{printf "%.2f", $0}')
+        percent_native=$(echo "scale=1; ($nanbox / $native) * 100" | bc | awk '{printf "%.1f", $0}')
     else
         speedup3="N/A"
+        percent_native="N/A"
+    fi
+
+    if [ -n "$nanbox" ] && [ -n "$python" ] && [ "$nanbox" != "N/A" ] && [ "$python" != "N/A" ]; then
+        speedup4=$(echo "scale=2; $nanbox / $python" | bc | awk '{printf "%.2f", $0}')
+        percent=$(echo "scale=1; ($nanbox / $python) * 100" | bc | awk '{printf "%.1f", $0}')
+    else
+        speedup4="N/A"
         percent="N/A"
     fi
 
-    printf "│ %-15s │ %10sx │ %10sx │ %10sx │\n" \
-        "$name" "$speedup1" "$speedup2" "$speedup3"
+    printf "│ %-15s │ %10sx │ %10sx │ %10sx │ %10sx │\n" \
+        "$name" "$speedup1" "$speedup2" "$speedup3" "$speedup4"
 
     # Accumulate for averages
     if [ "$speedup1" != "N/A" ]; then
@@ -188,9 +208,12 @@ for bench_config in "${BENCHMARKS[@]}"; do
     if [ "$speedup3" != "N/A" ]; then
         total_speedup3=$(echo "$total_speedup3 + $speedup3" | bc)
     fi
+    if [ "$speedup4" != "N/A" ]; then
+        total_speedup4=$(echo "$total_speedup4 + $speedup4" | bc)
+    fi
 done
 
-printf "└─────────────────┴──────────────┴──────────────┴──────────────┘\n"
+printf "└─────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘\n"
 echo ""
 
 # Print averages
@@ -198,26 +221,41 @@ if [ $count -gt 0 ]; then
     avg1=$(echo "scale=2; $total_speedup1 / $count" | bc | awk '{printf "%.2f", $0}')
     avg2=$(echo "scale=2; $total_speedup2 / $count" | bc | awk '{printf "%.2f", $0}')
     avg3=$(echo "scale=2; $total_speedup3 / $count" | bc | awk '{printf "%.2f", $0}')
-    avg_percent=$(echo "scale=1; ($avg3) * 100" | bc | awk '{printf "%.1f", $0}')
+    avg4=$(echo "scale=2; $total_speedup4 / $count" | bc | awk '{printf "%.2f", $0}')
+    avg_percent_native=$(echo "scale=1; ($avg3) * 100" | bc | awk '{printf "%.1f", $0}')
+    avg_percent_python=$(echo "scale=1; ($avg4) * 100" | bc | awk '{printf "%.1f", $0}')
 
     echo -e "${BLUE}📈 Average Speedups:${NC}"
     echo -e "   Bytecode vs Interpreter:  ${GREEN}${avg1}x${NC}"
     echo -e "   NaN Boxing vs Bytecode:   ${GREEN}${avg2}x${NC}"
 
-    if [ "$RUN_PYTHON" = true ]; then
-        echo -e "   TopLang vs Python:        ${GREEN}${avg3}x${NC} (${avg_percent}% of Python speed)"
-
-        # Determine color based on performance
-        if (( $(echo "$avg_percent > 80" | bc -l) )); then
+    # Show native comparison if available
+    if [ "$avg3" != "0.00" ] && [ "$avg3" != "N/A" ]; then
+        # Determine color based on native performance
+        if (( $(echo "$avg_percent_native > 50" | bc -l) )); then
             COLOR=$GREEN
-        elif (( $(echo "$avg_percent > 50" | bc -l) )); then
+        elif (( $(echo "$avg_percent_native > 20" | bc -l) )); then
+            COLOR=$YELLOW
+        else
+            COLOR=$RED
+        fi
+        echo -e "   TopLang vs Native Rust:   ${COLOR}${avg3}x${NC} (${COLOR}${avg_percent_native}% of native speed${NC})"
+    fi
+
+    if [ "$RUN_PYTHON" = true ]; then
+        echo -e "   TopLang vs Python:        ${GREEN}${avg4}x${NC} (${avg_percent_python}% of Python speed)"
+
+        # Determine color based on Python performance
+        if (( $(echo "$avg_percent_python > 80" | bc -l) )); then
+            COLOR=$GREEN
+        elif (( $(echo "$avg_percent_python > 50" | bc -l) )); then
             COLOR=$YELLOW
         else
             COLOR=$RED
         fi
 
         echo ""
-        echo -e "${COLOR}🎯 TopLang is currently at ${avg_percent}% of Python's speed${NC}"
+        echo -e "${COLOR}🎯 TopLang is currently at ${avg_percent_python}% of Python's speed${NC}"
     fi
 fi
 

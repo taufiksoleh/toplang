@@ -19,3 +19,9 @@ src_cpp/
 
 # Editor
 *.kate-swp
+
+# Benchmark binaries
+benchmarks/native/fibonacci
+benchmarks/native/primes
+benchmarks/native/array_sum
+benchmarks/results/

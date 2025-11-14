@@ -50,6 +50,11 @@ jobs:
     - name: Build release binaries
       run: cargo build --release --all-targets
 
+    - name: Build native benchmarks
+      run: |
+        chmod +x benchmarks/native/build.sh
+        ./benchmarks/native/build.sh
+
     - name: Make benchmark scripts executable
       run: |
         chmod +x benchmarks/run_all.sh
@@ -110,25 +115,29 @@ jobs:
 
             // Main performance table
             comment += '### Execution Times\n\n';
-            comment += '| Benchmark | Interpreter | Bytecode | NaN Boxing | Python | \n';
-            comment += '|-----------|-------------|----------|------------|--------|\n';
+            comment += '| Benchmark | Interpreter | Bytecode | NaN Boxing | Native (Rust) | Python | \n';
+            comment += '|-----------|-------------|----------|------------|---------------|--------|\n';
 
             let hasPython = false;
+            let hasNative = false;
             for (const [name, bench] of Object.entries(data.benchmarks)) {
+              const nativeTime = bench.native ? `${bench.native.avg_ms}ms` : '-';
               const pythonTime = bench.python ? `${bench.python.avg_ms}ms` : '-';
+              if (bench.native) hasNative = true;
               if (bench.python) hasPython = true;
-              comment += `| **${name}** | ${bench.interpreter.avg_ms}ms | ${bench.bytecode.avg_ms}ms | ${bench.nanbox.avg_ms}ms | ${pythonTime} |\n`;
+              comment += `| **${name}** | ${bench.interpreter.avg_ms}ms | ${bench.bytecode.avg_ms}ms | ${bench.nanbox.avg_ms}ms | ${nativeTime} | ${pythonTime} |\n`;
             }
 
             // Speedup analysis table
             comment += '\n### Speedup Analysis\n\n';
-            comment += '| Benchmark | Bytecode vs Interp | NanBox vs Bytecode | NanBox vs Interp | NanBox vs Python |\n';
-            comment += '|-----------|--------------------|--------------------|------------------|------------------|\n';
+            comment += '| Benchmark | Bytecode vs Interp | NanBox vs Bytecode | NanBox vs Interp | NanBox vs Native | NanBox vs Python |\n';
+            comment += '|-----------|--------------------|--------------------|------------------|------------------|------------------|\n';
 
             for (const [name, bench] of Object.entries(data.benchmarks)) {
               const sp = bench.speedups;
+              const vsNative = sp.nanbox_vs_native > 0 ? `${sp.nanbox_vs_native.toFixed(2)}x (${(sp.nanbox_vs_native * 100).toFixed(1)}%)` : '-';
               const vsPython = sp.nanbox_vs_python > 0 ? `${sp.nanbox_vs_python.toFixed(2)}x (${(sp.nanbox_vs_python * 100).toFixed(1)}%)` : '-';
-              comment += `| **${name}** | ${sp.bytecode_vs_interp.toFixed(2)}x | ${sp.nanbox_vs_bytecode.toFixed(2)}x | ${sp.nanbox_vs_interp.toFixed(2)}x | ${vsPython} |\n`;
+              comment += `| **${name}** | ${sp.bytecode_vs_interp.toFixed(2)}x | ${sp.nanbox_vs_bytecode.toFixed(2)}x | ${sp.nanbox_vs_interp.toFixed(2)}x | ${vsNative} | ${vsPython} |\n`;
             }
 
             // Calculate averages
@@ -141,6 +150,17 @@ jobs:
             comment += `- 🚀 **Bytecode optimization:** ${avgBytecodeSpeedup}x faster than interpreter\n`;
             comment += `- ⚡ **NaN Boxing optimization:** ${avgNanboxSpeedup}x faster than bytecode\n`;
             comment += `- 🎯 **Total speedup:** ${avgTotalSpeedup}x faster than interpreter\n`;
+
+            if (hasNative) {
+              const nativeBenchmarks = benchmarks.filter(b => b.speedups.nanbox_vs_native > 0);
+              if (nativeBenchmarks.length > 0) {
+                const avgVsNative = (nativeBenchmarks.reduce((sum, b) => sum + b.speedups.nanbox_vs_native, 0) / nativeBenchmarks.length).toFixed(2);
+                const percentOfNative = (parseFloat(avgVsNative) * 100).toFixed(1);
+
+                const emoji = percentOfNative >= 50 ? '🏆' : percentOfNative >= 20 ? '⚡' : '🔧';
+                comment += `- ${emoji} **Performance vs Native Rust:** ${avgVsNative}x (${percentOfNative}% of native speed)\n`;
+              }
+            }
 
             if (hasPython) {
               const pythonBenchmarks = benchmarks.filter(b => b.speedups.nanbox_vs_python > 0);

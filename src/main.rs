@@ -142,7 +142,12 @@ fn run(cli: Cli) -> Result<()> {
         if cli.nanbox {
             // Use NaN-boxed VM for maximum performance
             if cli.verbose {
-                println!("{}", "Executing with NaN-boxed VM (maximum performance)...".blue().bold());
+                println!(
+                    "{}",
+                    "Executing with NaN-boxed VM (maximum performance)..."
+                        .blue()
+                        .bold()
+                );
                 println!();
             }
 
@@ -151,7 +156,8 @@ fn run(cli: Cli) -> Result<()> {
                 vm.set_debug(true);
             }
 
-            vm.execute(chunk).with_context(|| "NaN-boxed VM runtime error")?
+            vm.execute(chunk)
+                .with_context(|| "NaN-boxed VM runtime error")?
         } else {
             // Use standard optimized VM
             if cli.verbose {

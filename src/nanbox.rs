@@ -10,7 +10,6 @@
 ///   - False: 0x7FF8_0000_0000_0001
 ///   - True:  0x7FF8_0000_0000_0002
 ///   - Pointer: 0x7FF8_xxxx_xxxx_xxxx (48-bit pointer in lower bits)
-
 use anyhow::{anyhow, Result};
 
 // NaN mask: exponent all 1s, mantissa non-zero

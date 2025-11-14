@@ -3,10 +3,10 @@
 //!
 //! Runs benchmarks across multiple VM implementations and compares with Python
 
-use std::process::Command;
-use std::time::{Duration, Instant};
 use std::fs;
 use std::path::Path;
+use std::process::Command;
+use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone)]
 struct BenchmarkResult {
@@ -81,12 +81,15 @@ fn main() {
             let results = run_benchmark(bench, vm_name, flags);
 
             if !results.is_empty() {
-                let avg_ms = results.iter().map(|r| r.duration_ms).sum::<u128>() / results.len() as u128;
+                let avg_ms =
+                    results.iter().map(|r| r.duration_ms).sum::<u128>() / results.len() as u128;
                 let min_ms = results.iter().map(|r| r.duration_ms).min().unwrap();
                 let max_ms = results.iter().map(|r| r.duration_ms).max().unwrap();
 
-                println!("   {:14} avg: {:4}ms  min: {:4}ms  max: {:4}ms",
-                         vm_name, avg_ms, min_ms, max_ms);
+                println!(
+                    "   {:14} avg: {:4}ms  min: {:4}ms  max: {:4}ms",
+                    vm_name, avg_ms, min_ms, max_ms
+                );
 
                 all_results.push((bench.name.clone(), vm_name.to_string(), avg_ms));
             }
@@ -146,13 +149,16 @@ fn print_summary_table(results: &[(String, String, u128)], benchmarks: &[Benchma
     println!("├─────────────────┼────────────┼────────────┼────────────┤");
 
     for bench in benchmarks {
-        let interp = results.iter()
+        let interp = results
+            .iter()
             .find(|(n, v, _)| n == &bench.name && v == "Interpreter")
             .map(|(_, _, d)| *d);
-        let bytecode = results.iter()
+        let bytecode = results
+            .iter()
             .find(|(n, v, _)| n == &bench.name && v == "Bytecode VM")
             .map(|(_, _, d)| *d);
-        let nanbox = results.iter()
+        let nanbox = results
+            .iter()
             .find(|(n, v, _)| n == &bench.name && v == "NaN Boxing")
             .map(|(_, _, d)| *d);
 
@@ -177,13 +183,16 @@ fn print_speedup_analysis(results: &[(String, String, u128)], benchmarks: &[Benc
     println!("├─────────────────┼──────────────┼──────────────┤");
 
     for bench in benchmarks {
-        let interp = results.iter()
+        let interp = results
+            .iter()
             .find(|(n, v, _)| n == &bench.name && v == "Interpreter")
             .map(|(_, _, d)| *d);
-        let bytecode = results.iter()
+        let bytecode = results
+            .iter()
             .find(|(n, v, _)| n == &bench.name && v == "Bytecode VM")
             .map(|(_, _, d)| *d);
-        let nanbox = results.iter()
+        let nanbox = results
+            .iter()
             .find(|(n, v, _)| n == &bench.name && v == "NaN Boxing")
             .map(|(_, _, d)| *d);
 
@@ -210,26 +219,40 @@ fn print_speedup_analysis(results: &[(String, String, u128)], benchmarks: &[Benc
     println!();
 
     // Calculate averages
-    let avg_bytecode_speedup = calculate_avg_speedup(results, benchmarks, "Interpreter", "Bytecode VM");
-    let avg_nanbox_speedup = calculate_avg_speedup(results, benchmarks, "Bytecode VM", "NaN Boxing");
+    let avg_bytecode_speedup =
+        calculate_avg_speedup(results, benchmarks, "Interpreter", "Bytecode VM");
+    let avg_nanbox_speedup =
+        calculate_avg_speedup(results, benchmarks, "Bytecode VM", "NaN Boxing");
     let total_speedup = calculate_avg_speedup(results, benchmarks, "Interpreter", "NaN Boxing");
 
     println!("📈 Average Speedups:");
-    println!("   Bytecode VM vs Interpreter: {:.2}x", avg_bytecode_speedup);
+    println!(
+        "   Bytecode VM vs Interpreter: {:.2}x",
+        avg_bytecode_speedup
+    );
     println!("   NaN Boxing vs Bytecode:     {:.2}x", avg_nanbox_speedup);
-    println!("   NaN Boxing vs Interpreter:  {:.2}x (total)", total_speedup);
+    println!(
+        "   NaN Boxing vs Interpreter:  {:.2}x (total)",
+        total_speedup
+    );
     println!();
 }
 
-fn calculate_avg_speedup(results: &[(String, String, u128)], benchmarks: &[BenchmarkConfig],
-                         baseline: &str, target: &str) -> f64 {
+fn calculate_avg_speedup(
+    results: &[(String, String, u128)],
+    benchmarks: &[BenchmarkConfig],
+    baseline: &str,
+    target: &str,
+) -> f64 {
     let mut speedups = Vec::new();
 
     for bench in benchmarks {
-        let base = results.iter()
+        let base = results
+            .iter()
             .find(|(n, v, _)| n == &bench.name && v == baseline)
             .map(|(_, _, d)| *d);
-        let tgt = results.iter()
+        let tgt = results
+            .iter()
             .find(|(n, v, _)| n == &bench.name && v == target)
             .map(|(_, _, d)| *d);
 

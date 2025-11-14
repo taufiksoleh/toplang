@@ -11,7 +11,6 @@
 ///   - True:  0x7FF8_0000_0000_0002
 ///   - String: 0x7FF8_0000_0000_0003 + 48-bit Rc pointer
 ///   - Array:  0x7FF8_0000_0000_0004 + 48-bit Rc pointer
-
 use std::rc::Rc;
 
 // NaN mask: exponent all 1s, mantissa non-zero
@@ -354,7 +353,11 @@ mod tests {
 
     #[test]
     fn test_array() {
-        let arr = vec![NanValue::number(1.0), NanValue::number(2.0), NanValue::number(3.0)];
+        let arr = vec![
+            NanValue::number(1.0),
+            NanValue::number(2.0),
+            NanValue::number(3.0),
+        ];
         let v = NanValue::array(arr);
         assert!(v.is_array());
         if let Some(a) = v.as_array() {

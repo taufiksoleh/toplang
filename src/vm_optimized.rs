@@ -5,7 +5,6 @@
 /// - Inline small functions aggressively
 /// - Specialize common operations
 /// - Cache global lookups
-
 use crate::bytecode::*;
 use crate::vm::Value;
 use anyhow::{anyhow, Result};
@@ -455,7 +454,9 @@ impl OptimizedVM {
                     let len = match value {
                         Value::String(s) => s.len(),
                         Value::Array(a) => a.len(),
-                        _ => return Err(anyhow!("Length can only be applied to strings or arrays")),
+                        _ => {
+                            return Err(anyhow!("Length can only be applied to strings or arrays"))
+                        }
                     };
                     self.push_fast(Value::Number(len as f64));
                 }

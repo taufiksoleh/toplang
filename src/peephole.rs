@@ -2,7 +2,6 @@
 ///
 /// This module performs post-compilation bytecode optimization by examining
 /// small windows of instructions and replacing them with more efficient sequences.
-
 use crate::bytecode::*;
 
 /// Optimize a chunk of bytecode with peephole optimizations
@@ -54,7 +53,10 @@ fn optimize_instructions(code: &mut Vec<Instruction>) {
         }
 
         // Pattern 7: Remove dead code after Return/Halt
-        if matches!(code[i], Instruction::Return | Instruction::ReturnNull | Instruction::Halt) {
+        if matches!(
+            code[i],
+            Instruction::Return | Instruction::ReturnNull | Instruction::Halt
+        ) {
             // Check if there are unreachable instructions after this
             // (except for jump targets - which we can't easily detect here)
             // This is conservative - we skip this optimization for now

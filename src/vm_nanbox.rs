@@ -5,7 +5,6 @@
 /// - Inline small functions aggressively
 /// - Specialize common operations
 /// - Cache global lookups
-
 use crate::bytecode::*;
 use crate::nanbox_safe::NanValue;
 use anyhow::{anyhow, Result};
@@ -191,31 +190,52 @@ impl NanBoxVM {
                 }
 
                 Instruction::Multiply => {
-                    let b = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
-                    let a = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let b = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
+                    let a = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     self.push_fast(NanValue::number(a * b));
                 }
 
                 Instruction::Divide => {
-                    let b = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let b = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     if b == 0.0 {
                         return Err(anyhow!("Division by zero"));
                     }
-                    let a = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let a = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     self.push_fast(NanValue::number(a / b));
                 }
 
                 Instruction::Modulo => {
-                    let b = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let b = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     if b == 0.0 {
                         return Err(anyhow!("Modulo by zero"));
                     }
-                    let a = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let a = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     self.push_fast(NanValue::number(a % b));
                 }
 
                 Instruction::Negate => {
-                    let a = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let a = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     self.push_fast(NanValue::number(-a));
                 }
 
@@ -315,26 +335,50 @@ impl NanBoxVM {
                 }
 
                 Instruction::Greater => {
-                    let b = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
-                    let a = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let b = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
+                    let a = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     self.push_fast(NanValue::boolean(a > b));
                 }
 
                 Instruction::GreaterEqual => {
-                    let b = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
-                    let a = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let b = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
+                    let a = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     self.push_fast(NanValue::boolean(a >= b));
                 }
 
                 Instruction::Less => {
-                    let b = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
-                    let a = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let b = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
+                    let a = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     self.push_fast(NanValue::boolean(a < b));
                 }
 
                 Instruction::LessEqual => {
-                    let b = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
-                    let a = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))?;
+                    let b = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
+                    let a = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?;
                     self.push_fast(NanValue::boolean(a <= b));
                 }
 
@@ -436,8 +480,17 @@ impl NanBoxVM {
                 }
 
                 Instruction::GetIndex => {
-                    let index = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))? as usize;
-                    let array = self.pop_fast().as_array().ok_or_else(|| anyhow!("Expected array"))?.as_ref().clone();
+                    let index = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?
+                        as usize;
+                    let array = self
+                        .pop_fast()
+                        .as_array()
+                        .ok_or_else(|| anyhow!("Expected array"))?
+                        .as_ref()
+                        .clone();
 
                     if index >= array.len() {
                         return Err(anyhow!("Array index out of bounds: {}", index));
@@ -448,8 +501,17 @@ impl NanBoxVM {
 
                 Instruction::SetIndex => {
                     let value = self.pop_fast();
-                    let index = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))? as usize;
-                    let mut array = self.pop_fast().as_array().ok_or_else(|| anyhow!("Expected array"))?.as_ref().clone();
+                    let index = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?
+                        as usize;
+                    let mut array = self
+                        .pop_fast()
+                        .as_array()
+                        .ok_or_else(|| anyhow!("Expected array"))?
+                        .as_ref()
+                        .clone();
 
                     if index >= array.len() {
                         return Err(anyhow!("Array index out of bounds: {}", index));
@@ -472,14 +534,32 @@ impl NanBoxVM {
                 }
 
                 Instruction::Uppercase => {
-                    let s = self.pop_fast().as_string().ok_or_else(|| anyhow!("Expected string"))?.as_ref().clone();
+                    let s = self
+                        .pop_fast()
+                        .as_string()
+                        .ok_or_else(|| anyhow!("Expected string"))?
+                        .as_ref()
+                        .clone();
                     self.push_fast(NanValue::string(s.to_uppercase()));
                 }
 
                 Instruction::Substring => {
-                    let to = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))? as usize;
-                    let from = self.pop_fast().as_number().ok_or_else(|| anyhow!("Expected number"))? as usize;
-                    let s = self.pop_fast().as_string().ok_or_else(|| anyhow!("Expected string"))?.as_ref().clone();
+                    let to = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?
+                        as usize;
+                    let from = self
+                        .pop_fast()
+                        .as_number()
+                        .ok_or_else(|| anyhow!("Expected number"))?
+                        as usize;
+                    let s = self
+                        .pop_fast()
+                        .as_string()
+                        .ok_or_else(|| anyhow!("Expected string"))?
+                        .as_ref()
+                        .clone();
 
                     let chars: Vec<char> = s.chars().collect();
                     if from > to || to > chars.len() {

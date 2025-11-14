@@ -5,7 +5,6 @@
 /// reducing dispatch overhead.
 ///
 /// Performance gain: 1.3-1.5x faster than match-based dispatch
-
 use crate::bytecode::*;
 use crate::vm::Value;
 use anyhow::{anyhow, Result};

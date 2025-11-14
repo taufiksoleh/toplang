@@ -69,22 +69,26 @@ jobs:
       run: |
         if [ -f benchmarks/results/bench_*.json ]; then
           LATEST=$(ls -t benchmarks/results/bench_*.json | head -1)
-          echo "### Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Benchmark Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
-          cat "$LATEST" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
           if command -v jq &> /dev/null; then
+            echo "| Benchmark | Interpreter | VM | Native | Native Speedup |" >> $GITHUB_STEP_SUMMARY
+            echo "|-----------|-------------|-----|--------|----------------|" >> $GITHUB_STEP_SUMMARY
+
+            jq -r '.benchmarks | to_entries[] | "| \(.key) | \(.value.interpreter.avg_ms)ms | \(.value.nanbox.avg_ms)ms | \(.value.native.avg_ms)ms | **\(.value.speedups.native_vs_interp | tonumber | . * 10 | round / 10)x** ⚡ |"' "$LATEST" >> $GITHUB_STEP_SUMMARY
+
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Performance Summary" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
 
-            avg_total=$(jq '.benchmarks | to_entries | map(.value.speedups.nanbox_vs_interp) | add / length' "$LATEST")
-            avg_vs_python=$(jq '.benchmarks | to_entries | map(select(.value.speedups.nanbox_vs_python > 0) | .value.speedups.nanbox_vs_python) | add / length' "$LATEST")
+            avg_vm=$(jq '.benchmarks | to_entries | map(.value.speedups.nanbox_vs_interp) | add / length' "$LATEST")
+            avg_native=$(jq '.benchmarks | to_entries | map(.value.speedups.native_vs_interp) | add / length' "$LATEST")
+            avg_compile=$(jq '.benchmarks | to_entries | map(.value.native.compile_ms) | add / length' "$LATEST")
 
-            echo "- **Total Speedup (NaN Boxing vs Interpreter):** ${avg_total}x" >> $GITHUB_STEP_SUMMARY
-            echo "- **Performance vs Python:** ${avg_vs_python}x ($(echo "$avg_vs_python * 100" | bc)%)" >> $GITHUB_STEP_SUMMARY
+            echo "- **VM Speedup (NaN Boxing vs Interpreter):** ${avg_vm}x" >> $GITHUB_STEP_SUMMARY
+            echo "- **Native Speedup vs Interpreter:** ${avg_native}x 🚀" >> $GITHUB_STEP_SUMMARY
+            echo "- **Average Compilation Time:** ${avg_compile}ms (very fast!)" >> $GITHUB_STEP_SUMMARY
           fi
         fi
 
@@ -101,15 +105,28 @@ jobs:
 
           if (results) {
             const data = JSON.parse(fs.readFileSync(`benchmarks/results/${results}`, 'utf8'));
-            
+
             let comment = '## 📊 Benchmark Results\n\n';
-            comment += '| Benchmark | Interpreter | Bytecode | NaN Boxing | Speedup |\n';
-            comment += '|-----------|-------------|----------|------------|----------|\n';
-            
+            comment += '| Benchmark | Interpreter | VM (NanBox) | Native (AOT) | Native Speedup | Compile Time |\n';
+            comment += '|-----------|-------------|-------------|--------------|----------------|---------------|\n';
+
             for (const [name, bench] of Object.entries(data.benchmarks)) {
-              comment += `| ${name} | ${bench.interpreter.avg_ms}ms | ${bench.bytecode.avg_ms}ms | ${bench.nanbox.avg_ms}ms | ${bench.speedups.nanbox_vs_interp.toFixed(2)}x |\n`;
+              const nativeSpeedup = bench.speedups.native_vs_interp.toFixed(1);
+              const compileTime = bench.native.compile_ms;
+              comment += `| ${name} | ${bench.interpreter.avg_ms}ms | ${bench.nanbox.avg_ms}ms | ${bench.native.avg_ms}ms | **${nativeSpeedup}x** ⚡ | ${compileTime}ms |\n`;
             }
-            
+
+            // Add summary
+            const benchmarks = Object.values(data.benchmarks);
+            const avgNativeSpeedup = (benchmarks.reduce((sum, b) => sum + b.speedups.native_vs_interp, 0) / benchmarks.length).toFixed(1);
+            const avgCompileTime = Math.round(benchmarks.reduce((sum, b) => sum + b.native.compile_ms, 0) / benchmarks.length);
+
+            comment += '\n**Summary:**\n';
+            comment += `- Average native speedup: **${avgNativeSpeedup}x faster** than interpreter 🚀\n`;
+            comment += `- Average compilation time: ${avgCompileTime}ms (very fast!)\n`;
+            comment += `- System: ${data.system.os} ${data.system.arch}\n`;
+            comment += `- Commit: ${data.git_commit.substring(0, 7)}\n`;
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

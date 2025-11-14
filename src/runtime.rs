@@ -181,25 +181,27 @@ pub extern "C" fn toplang_input(prompt: Value) -> Value {
 }
 
 /// Create a runtime string from a Rust string (for constants)
+///
+/// # Safety
+/// The caller must ensure that `data` points to a valid UTF-8 byte sequence
+/// of length `len` that will remain valid for the duration of this call.
 #[no_mangle]
-pub extern "C" fn toplang_string_new(data: *const u8, len: usize) -> Value {
-    unsafe {
-        let slice = std::slice::from_raw_parts(data, len);
-        let mut buffer = slice.to_vec();
+pub unsafe extern "C" fn toplang_string_new(data: *const u8, len: usize) -> Value {
+    let slice = std::slice::from_raw_parts(data, len);
+    let mut buffer = slice.to_vec();
 
-        let len = buffer.len();
-        let capacity = buffer.capacity();
-        let data = buffer.as_mut_ptr();
-        std::mem::forget(buffer);
+    let len = buffer.len();
+    let capacity = buffer.capacity();
+    let data = buffer.as_mut_ptr();
+    std::mem::forget(buffer);
 
-        let runtime_str = Box::new(RuntimeString {
-            data,
-            len,
-            capacity,
-        });
+    let runtime_str = Box::new(RuntimeString {
+        data,
+        len,
+        capacity,
+    });
 
-        Value::ptr(Box::into_raw(runtime_str) as *mut u8)
-    }
+    Value::ptr(Box::into_raw(runtime_str) as *mut u8)
 }
 
 /// Add two values

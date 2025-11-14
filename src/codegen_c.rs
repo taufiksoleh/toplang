@@ -217,7 +217,7 @@ impl CCodeGen {
 
         // Find jump targets
         let mut jump_targets = std::collections::HashSet::new();
-        for (_ip, instr) in chunk.code.iter().enumerate() {
+        for instr in chunk.code.iter() {
             match instr {
                 Instruction::Jump(target)
                 | Instruction::JumpIfFalse(target)

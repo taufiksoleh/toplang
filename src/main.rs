@@ -177,7 +177,7 @@ fn run(cli: Cli) -> Result<()> {
             let mut path = cli.file.clone();
             path.set_extension(if cfg!(windows) { "exe" } else { "" });
             path.file_name()
-                .map(|name| PathBuf::from(name))
+                .map(PathBuf::from)
                 .unwrap_or_else(|| PathBuf::from("a.out"))
         });
 
@@ -194,7 +194,7 @@ fn run(cli: Cli) -> Result<()> {
         let compile_status = if cfg!(target_os = "windows") {
             std::process::Command::new("cl")
                 .arg(&c_file)
-                .arg(&format!("/Fe:{}", output_file.display()))
+                .arg(format!("/Fe:{}", output_file.display()))
                 .arg("/O2")
                 .status()
         } else {

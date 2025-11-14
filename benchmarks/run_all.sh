@@ -180,7 +180,12 @@ for bench_config in "${BENCHMARKS[@]}"; do
 
     if [ -n "$nanbox" ] && [ -n "$native" ] && [ "$nanbox" != "N/A" ] && [ "$native" != "N/A" ]; then
         speedup3=$(echo "scale=2; $nanbox / $native" | bc | awk '{printf "%.2f", $0}')
-        percent_native=$(echo "scale=1; ($nanbox / $native) * 100" | bc | awk '{printf "%.1f", $0}')
+        # If speedup > 1, TopLang is slower, invert for percentage
+        if (( $(echo "$speedup3 > 1" | bc -l) )); then
+            percent_native=$(echo "scale=1; (1 / $speedup3) * 100" | bc | awk '{printf "%.1f", $0}')
+        else
+            percent_native=$(echo "scale=1; $speedup3 * 100" | bc | awk '{printf "%.1f", $0}')
+        fi
     else
         speedup3="N/A"
         percent_native="N/A"
@@ -231,6 +236,16 @@ if [ $count -gt 0 ]; then
 
     # Show native comparison if available
     if [ "$avg3" != "0.00" ] && [ "$avg3" != "N/A" ]; then
+        # If avg3 > 1, TopLang is slower, so invert for percentage
+        # If avg3 < 1, TopLang is faster (unlikely but handle it)
+        if (( $(echo "$avg3 > 1" | bc -l) )); then
+            # TopLang is slower: show 1/speedup as percentage
+            avg_percent_native=$(echo "scale=1; (1 / $avg3) * 100" | bc | awk '{printf "%.1f", $0}')
+        else
+            # TopLang is faster (multiply by 100)
+            avg_percent_native=$(echo "scale=1; $avg3 * 100" | bc | awk '{printf "%.1f", $0}')
+        fi
+
         # Determine color based on native performance
         if (( $(echo "$avg_percent_native > 50" | bc -l) )); then
             COLOR=$GREEN
@@ -239,7 +254,7 @@ if [ $count -gt 0 ]; then
         else
             COLOR=$RED
         fi
-        echo -e "   TopLang vs Native Rust:   ${COLOR}${avg3}x${NC} (${COLOR}${avg_percent_native}% of native speed${NC})"
+        echo -e "   TopLang vs Native Rust:   ${COLOR}${avg3}x slower${NC} (${COLOR}${avg_percent_native}% of native speed${NC})"
     fi
 
     if [ "$RUN_PYTHON" = true ]; then

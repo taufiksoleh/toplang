@@ -135,7 +135,13 @@ jobs:
 
             for (const [name, bench] of Object.entries(data.benchmarks)) {
               const sp = bench.speedups;
-              const vsNative = sp.nanbox_vs_native > 0 ? `${sp.nanbox_vs_native.toFixed(2)}x (${(sp.nanbox_vs_native * 100).toFixed(1)}%)` : '-';
+              let vsNative = '-';
+              if (sp.nanbox_vs_native > 0) {
+                const percent = sp.nanbox_vs_native > 1
+                  ? ((1 / sp.nanbox_vs_native) * 100).toFixed(1)
+                  : (sp.nanbox_vs_native * 100).toFixed(1);
+                vsNative = `${sp.nanbox_vs_native.toFixed(2)}x (${percent}%)`;
+              }
               const vsPython = sp.nanbox_vs_python > 0 ? `${sp.nanbox_vs_python.toFixed(2)}x (${(sp.nanbox_vs_python * 100).toFixed(1)}%)` : '-';
               comment += `| **${name}** | ${sp.bytecode_vs_interp.toFixed(2)}x | ${sp.nanbox_vs_bytecode.toFixed(2)}x | ${sp.nanbox_vs_interp.toFixed(2)}x | ${vsNative} | ${vsPython} |\n`;
             }
@@ -155,10 +161,14 @@ jobs:
               const nativeBenchmarks = benchmarks.filter(b => b.speedups.nanbox_vs_native > 0);
               if (nativeBenchmarks.length > 0) {
                 const avgVsNative = (nativeBenchmarks.reduce((sum, b) => sum + b.speedups.nanbox_vs_native, 0) / nativeBenchmarks.length).toFixed(2);
-                const percentOfNative = (parseFloat(avgVsNative) * 100).toFixed(1);
+                // If avgVsNative > 1, TopLang is slower, so invert for percentage
+                const percentOfNative = avgVsNative > 1
+                  ? ((1 / parseFloat(avgVsNative)) * 100).toFixed(1)
+                  : (parseFloat(avgVsNative) * 100).toFixed(1);
 
                 const emoji = percentOfNative >= 50 ? '🏆' : percentOfNative >= 20 ? '⚡' : '🔧';
-                comment += `- ${emoji} **Performance vs Native Rust:** ${avgVsNative}x (${percentOfNative}% of native speed)\n`;
+                const comparison = avgVsNative > 1 ? `${avgVsNative}x slower` : `${avgVsNative}x faster`;
+                comment += `- ${emoji} **Performance vs Native Rust:** ${comparison} (${percentOfNative}% of native speed)\n`;
               }
             }
 

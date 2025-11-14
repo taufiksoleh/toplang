@@ -182,9 +182,9 @@ for bench_config in "${BENCHMARKS[@]}"; do
         speedup3=$(echo "scale=2; $nanbox / $native" | bc | awk '{printf "%.2f", $0}')
         # If speedup > 1, TopLang is slower, invert for percentage
         if (( $(echo "$speedup3 > 1" | bc -l) )); then
-            percent_native=$(echo "scale=1; (1 / $speedup3) * 100" | bc | awk '{printf "%.1f", $0}')
+            percent_native=$(echo "scale=2; (1 / $speedup3) * 100" | bc | awk '{printf "%.1f", $0}')
         else
-            percent_native=$(echo "scale=1; $speedup3 * 100" | bc | awk '{printf "%.1f", $0}')
+            percent_native=$(echo "scale=2; $speedup3 * 100" | bc | awk '{printf "%.1f", $0}')
         fi
     else
         speedup3="N/A"
@@ -240,10 +240,10 @@ if [ $count -gt 0 ]; then
         # If avg3 < 1, TopLang is faster (unlikely but handle it)
         if (( $(echo "$avg3 > 1" | bc -l) )); then
             # TopLang is slower: show 1/speedup as percentage
-            avg_percent_native=$(echo "scale=1; (1 / $avg3) * 100" | bc | awk '{printf "%.1f", $0}')
+            avg_percent_native=$(echo "scale=2; (1 / $avg3) * 100" | bc | awk '{printf "%.1f", $0}')
         else
             # TopLang is faster (multiply by 100)
-            avg_percent_native=$(echo "scale=1; $avg3 * 100" | bc | awk '{printf "%.1f", $0}')
+            avg_percent_native=$(echo "scale=2; $avg3 * 100" | bc | awk '{printf "%.1f", $0}')
         fi
 
         # Determine color based on native performance

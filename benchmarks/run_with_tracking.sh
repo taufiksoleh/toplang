@@ -115,16 +115,16 @@ for bench_name in "${!bench_files[@]}"; do
         has_python=false
     fi
 
-    # Calculate speedups
-    speedup_bytecode=$(echo "scale=3; $avg_i / $avg_b" | bc)
-    speedup_nanbox=$(echo "scale=3; $avg_b / $avg_n" | bc)
-    speedup_total=$(echo "scale=3; $avg_i / $avg_n" | bc)
+    # Calculate speedups (ensure leading zero for JSON compatibility)
+    speedup_bytecode=$(echo "scale=3; $avg_i / $avg_b" | bc | awk '{printf "%.3f", $0}')
+    speedup_nanbox=$(echo "scale=3; $avg_b / $avg_n" | bc | awk '{printf "%.3f", $0}')
+    speedup_total=$(echo "scale=3; $avg_i / $avg_n" | bc | awk '{printf "%.3f", $0}')
 
     if [ "$has_python" = true ]; then
-        vs_python=$(echo "scale=3; $avg_n / $avg_p" | bc)
+        vs_python=$(echo "scale=3; $avg_n / $avg_p" | bc | awk '{printf "%.3f", $0}')
         python_json="\"python\": { \"avg_ms\": $avg_p, \"min_ms\": $min_p, \"max_ms\": $max_p },"
     else
-        vs_python=0
+        vs_python="0.000"
         python_json=""
     fi
 
@@ -195,7 +195,7 @@ if [ -n "$LATEST_PREVIOUS" ] && command -v jq &> /dev/null; then
 
         if [ "$curr_time" != "0" ] && [ "$prev_time" != "0" ]; then
             diff=$((curr_time - prev_time))
-            percent=$(echo "scale=1; ($diff / $prev_time) * 100" | bc)
+            percent=$(echo "scale=1; ($diff / $prev_time) * 100" | bc | awk '{printf "%.1f", $0}')
 
             if [ $diff -lt 0 ]; then
                 echo "   $bench_name: FASTER by ${diff#-}ms (${percent#-}%)"

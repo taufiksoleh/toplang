@@ -1,0 +1,79 @@
+TopLang Native Compilation Benchmark Results
+Generated: Fri Nov 14 18:24:36 UTC 2025
+System: Linux x86_64
+Compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+============================================================
+
+================================================
+Benchmark: fibonacci
+  Interpreter:     .514207988s
+  Bytecode VM:     .177258669s
+  Native Compiled: .013591920s
+  Compile Time:    .221389322s
+  Speedups:
+    VM vs Interpreter:     2.90x
+    Native vs Interpreter: 37.83x
+    Native vs VM:          13.04x
+
+================================================
+Benchmark: primes
+  Interpreter:     .469187440s
+  Bytecode VM:     .245721569s
+  Native Compiled: .013819689s
+  Compile Time:    .260959807s
+  Speedups:
+    VM vs Interpreter:     1.90x
+    Native vs Interpreter: 33.95x
+    Native vs VM:          17.78x
+
+================================================
+Benchmark: array_sum
+  Interpreter:     1.327330753s
+  Bytecode VM:     .501765743s
+  Native Compiled: .013370352s
+  Compile Time:    .221862481s
+  Speedups:
+    VM vs Interpreter:     2.64x
+    Native vs Interpreter: 99.27x
+    Native vs VM:          37.52x
+
+================================================
+Benchmark: nested_loops
+  Interpreter:     1.093672925s
+  Bytecode VM:     .502255098s
+  Native Compiled: .013555968s
+  Compile Time:    .229399830s
+  Speedups:
+    VM vs Interpreter:     2.17x
+    Native vs Interpreter: 80.67x
+    Native vs VM:          37.05x
+
+================================================
+Benchmark: factorial
+  Interpreter:     5.278517132s
+  Bytecode VM:     2.379991863s
+  Native Compiled: .015127746s
+  Compile Time:    .243727642s
+  Speedups:
+    VM vs Interpreter:     2.21x
+    Native vs Interpreter: 348.92x
+    Native vs VM:          157.32x
+
+================================================
+SUMMARY
+================================================
+Average Execution Times:
+  Interpreter:     1.736s
+  Bytecode VM:     .761s
+  Native Compiled: .013s
+  Compile Time:    .235s
+
+Average Speedups:
+  VM vs Interpreter:     2.28x faster
+  Native vs Interpreter: 133.53x faster
+  Native vs VM:          58.53x faster
+
+Key Insights:
+  🚀 Native compilation provides EXCELLENT performance!
+     More than 10x faster than interpretation.
+  ⚡ Compilation is fast (< 0.5s average)

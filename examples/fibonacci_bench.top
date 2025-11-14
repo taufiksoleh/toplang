@@ -1,0 +1,17 @@
+# Fibonacci benchmark
+function fibonacci(n) {
+    if n less than 2 {
+        return n
+    }
+    var a is fibonacci(n minus 1)
+    var b is fibonacci(n minus 2)
+    return a plus b
+}
+
+function main() {
+    print "Computing Fibonacci(25)..."
+    var result is fibonacci(25)
+    print "Result:"
+    print result
+    return 0
+}

@@ -101,6 +101,19 @@ for bench_name in "${!bench_files[@]}"; do
     read -r avg_n min_n max_n <<< $(run_bench "./target/release/topc $bench_file --bytecode --nanbox" $RUNS)
     echo "${avg_n}ms"
 
+    # Native compilation (compile + execute time)
+    echo -n "   Native (AOT)... "
+    native_bin="/tmp/bench_${bench_name}_$$"
+    compile_start=$(date +%s%N)
+    ./target/release/topc "$bench_file" --compile -o "$native_bin" > /dev/null 2>&1
+    compile_end=$(date +%s%N)
+    compile_time=$(( (compile_end - compile_start) / 1000000 ))
+
+    # Run compiled binary
+    read -r avg_nat min_nat max_nat <<< $(run_bench "$native_bin" $RUNS)
+    echo "${avg_nat}ms (compile: ${compile_time}ms)"
+    rm -f "$native_bin"
+
     # Python (if available)
     python_file="benchmarks/python/${bench_name}.py"
     if [ -f "$python_file" ] && command -v python3 &> /dev/null; then
@@ -119,12 +132,16 @@ for bench_name in "${!bench_files[@]}"; do
     speedup_bytecode=$(echo "scale=3; $avg_i / $avg_b" | bc | awk '{printf "%.3f", $0}')
     speedup_nanbox=$(echo "scale=3; $avg_b / $avg_n" | bc | awk '{printf "%.3f", $0}')
     speedup_total=$(echo "scale=3; $avg_i / $avg_n" | bc | awk '{printf "%.3f", $0}')
+    speedup_native_vs_interp=$(echo "scale=3; $avg_i / $avg_nat" | bc | awk '{printf "%.3f", $0}')
+    speedup_native_vs_vm=$(echo "scale=3; $avg_n / $avg_nat" | bc | awk '{printf "%.3f", $0}')
 
     if [ "$has_python" = true ]; then
         vs_python=$(echo "scale=3; $avg_n / $avg_p" | bc | awk '{printf "%.3f", $0}')
+        native_vs_python=$(echo "scale=3; $avg_nat / $avg_p" | bc | awk '{printf "%.3f", $0}')
         python_json="\"python\": { \"avg_ms\": $avg_p, \"min_ms\": $min_p, \"max_ms\": $max_p },"
     else
         vs_python="0.000"
+        native_vs_python="0.000"
         python_json=""
     fi
 
@@ -140,12 +157,16 @@ for bench_name in "${!bench_files[@]}"; do
       "interpreter": { "avg_ms": $avg_i, "min_ms": $min_i, "max_ms": $max_i },
       "bytecode": { "avg_ms": $avg_b, "min_ms": $min_b, "max_ms": $max_b },
       "nanbox": { "avg_ms": $avg_n, "min_ms": $min_n, "max_ms": $max_n },
+      "native": { "avg_ms": $avg_nat, "min_ms": $min_nat, "max_ms": $max_nat, "compile_ms": $compile_time },
       $python_json
       "speedups": {
         "bytecode_vs_interp": $speedup_bytecode,
         "nanbox_vs_bytecode": $speedup_nanbox,
         "nanbox_vs_interp": $speedup_total,
-        "nanbox_vs_python": $vs_python
+        "native_vs_interp": $speedup_native_vs_interp,
+        "native_vs_vm": $speedup_native_vs_vm,
+        "nanbox_vs_python": $vs_python,
+        "native_vs_python": $native_vs_python
       }
     }
 EOF

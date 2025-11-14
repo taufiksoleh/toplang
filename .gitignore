@@ -19,3 +19,13 @@ src_cpp/
 
 # Editor
 *.kate-swp
+
+# TopLang compiled artifacts
+# Generated C files from native compilation
+/*.c
+/examples/*.c
+# Compiled native executables
+/hello
+/fib_native
+/fibonacci
+/a.out

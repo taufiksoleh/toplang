@@ -1,0 +1,7 @@
+Date,Time,Commit,Branch,Benchmark,Interpreter_ms,VM_ms,Native_ms,Compile_ms,Native_vs_Interp,Native_vs_VM,System,Compiler
+2025-11-14,18:38:46,4cc5a09,claude/aggressive-performance-improvements-01JpbKJQULt3ijGDf7f2C41N,fibonacci,512,187,16,281,31.37,11.48,Linux x86_64,cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+2025-11-14,18:38:46,4cc5a09,claude/aggressive-performance-improvements-01JpbKJQULt3ijGDf7f2C41N,primes,483,253,14,274,33.74,17.73,Linux x86_64,cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+2025-11-14,18:38:46,4cc5a09,claude/aggressive-performance-improvements-01JpbKJQULt3ijGDf7f2C41N,array_sum,1353,501,15,262,86.46,32.04,Linux x86_64,cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+2025-11-14,18:38:46,4cc5a09,claude/aggressive-performance-improvements-01JpbKJQULt3ijGDf7f2C41N,nested_loops,1101,489,16,237,68.42,30.42,Linux x86_64,cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+2025-11-14,18:38:46,4cc5a09,claude/aggressive-performance-improvements-01JpbKJQULt3ijGDf7f2C41N,factorial,5350,2408,16,248,319.62,143.86,Linux x86_64,cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+2025-11-14,18:38:46,4cc5a09,claude/aggressive-performance-improvements-01JpbKJQULt3ijGDf7f2C41N,AVERAGE,1760,768,15,260,117.33,51.20,Linux x86_64,cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0

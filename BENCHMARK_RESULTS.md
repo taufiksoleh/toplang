@@ -12,14 +12,14 @@ Native compilation via C transpilation provides **exceptional performance gains*
 
 ### Performance by Benchmark
 
-| Benchmark | Interpreter | VM | Native | Native vs I | Native vs VM |
-|-----------|-------------|-----|---------|-------------|--------------|
-| **fibonacci** | 0.514s | 0.177s | 0.014s | **37.8x** | **13.0x** |
-| **primes** | 0.469s | 0.246s | 0.014s | **34.0x** | **17.8x** |
-| **array_sum** | 1.327s | 0.502s | 0.013s | **99.3x** | **37.5x** |
-| **nested_loops** | 1.094s | 0.502s | 0.014s | **80.7x** | **37.0x** |
-| **factorial** | 5.279s | 2.380s | 0.015s | **348.9x** | **157.3x** |
-| **AVERAGE** | **1.736s** | **0.761s** | **0.013s** | **133.5x** | **58.5x** |
+| Benchmark | Interpreter | VM | Native | Native vs I | Native vs VM | Native Performance Comment |
+|-----------|-------------|-----|---------|-------------|--------------|---------------------------|
+| **fibonacci** | 0.514s | 0.177s | 0.014s | **37.8x** | **13.0x** | Excellent loop optimization |
+| **primes** | 0.469s | 0.246s | 0.014s | **34.0x** | **17.8x** | Branch prediction + math ops |
+| **array_sum** | 1.327s | 0.502s | 0.013s | **99.3x** | **37.5x** | Memory access optimization |
+| **nested_loops** | 1.094s | 0.502s | 0.014s | **80.7x** | **37.0x** | Loop unrolling + register alloc |
+| **factorial** | 5.279s | 2.380s | 0.015s | **348.9x** | **157.3x** | 🔥 Intensive arithmetic optimization |
+| **AVERAGE** | **1.736s** | **0.761s** | **0.013s** | **133.5x** | **58.5x** | **GCC -O3 magic** ✨ |
 
 ### Key Insights
 

@@ -1,18 +1,33 @@
 #!/usr/bin/env python3
-# Array operations benchmark - sum large array
+# Array sum benchmark - Python equivalent
 
 def main():
-    size = 5000000
-    sum_val = 0
+    size = 100000
+    iterations = 100
+    
+    # Create array
+    arr = []
     i = 0
-
-    # Create and sum array
     while i < size:
-        sum_val += i
-        i += 1
-
-    print("Array sum:")
-    print(sum_val)
+        arr.append(i)
+        i = i + 1
+    
+    total = 0
+    iter_count = 0
+    
+    while iter_count < iterations:
+        sum_val = 0
+        idx = 0
+        while idx < size:
+            sum_val = sum_val + arr[idx]
+            idx = idx + 1
+        total = total + sum_val
+        iter_count = iter_count + 1
+    
+    print("Total sum:")
+    print(total)
+    
+    return 0
 
 if __name__ == "__main__":
-    main()
+    exit(main())

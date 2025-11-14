@@ -1,30 +1,36 @@
 #!/usr/bin/env python3
-# Prime numbers benchmark - count primes up to N
+# Primes benchmark - Python equivalent
+
+def is_prime(n):
+    if n <= 1:
+        return False
+    if n <= 3:
+        return True
+    if n % 2 == 0 or n % 3 == 0:
+        return False
+    
+    i = 5
+    while i * i <= n:
+        if n % i == 0 or n % (i + 2) == 0:
+            return False
+        i = i + 6
+    
+    return True
 
 def main():
-    limit = 50000
+    limit = 100000
     count = 0
-    num = 2
-
-    while num < limit:
-        is_prime = 1
-        i = 2
-
-        # Check if num is prime
-        while i * i < num + 1:
-            remainder = num - ((num // i) * i)
-            if remainder == 0:
-                is_prime = 0
-                i = num  # Break out of loop
-            i += 1
-
-        if is_prime == 1:
-            count += 1
-
-        num += 1
-
-    print("Prime count:")
+    n = 2
+    
+    while n < limit:
+        if is_prime(n):
+            count = count + 1
+        n = n + 1
+    
+    print("Primes found:")
     print(count)
+    
+    return 0
 
 if __name__ == "__main__":
-    main()
+    exit(main())

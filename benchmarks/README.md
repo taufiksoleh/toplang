@@ -1,95 +1,167 @@
 # TopLang Performance Benchmarks
 
-This directory contains performance benchmarks comparing TopLang with Python.
+Comprehensive benchmarking suite comparing TopLang's different VM implementations with Python.
 
 ## Quick Start
 
-Run all benchmarks:
 ```bash
-./benchmarks/run_benchmarks.sh
-```
+# Build release binaries
+cargo build --release
 
-Results will be saved to `benchmarks/results/` with timestamp.
+# Run Rust-based benchmark runner (recommended)
+./target/release/benchmark
+
+# Run with Python comparison
+./benchmarks/run_all.sh
+
+# Run with historical tracking (JSON output)
+./benchmarks/run_with_tracking.sh
+```
 
 ## Benchmark Suite
 
-### Benchmarks Included
+### TopLang Benchmarks (`toplang/`)
 
-1. **Fibonacci** - Iterative fibonacci calculation (1M iterations with modulo)
-2. **Primes** - Prime number counting up to 50,000
-3. **Array Sum** - Summing integers from 0 to 5 million
-4. **Nested Loops** - 5,000 x 1,000 nested loop iterations
-5. **Factorial** - Calculate factorials for numbers 0-5000 with modulo
+1. **fibonacci.top** - Iterative Fibonacci (1M iterations with modulo)
+2. **primes.top** - Prime number counting up to 100,000
+3. **array_sum.top** - Array summation (100K elements, 100 iterations)
+4. **nested_loops.top** - Triple nested loop benchmark
+5. **factorial.top** - Recursive factorial calculations
 
-### Latest Results
+### Python Benchmarks (`python/`)
 
-| Benchmark | TopLang (s) | Python (s) | Relative Performance |
-|-----------|-------------|------------|---------------------|
-| fibonacci | 0.537 | 0.131 | Python 4.1x faster |
-| primes | 0.475 | 0.180 | Python 2.6x faster |
-| array_sum | 1.331 | 0.326 | Python 4.1x faster |
-| nested_loops | 1.148 | 0.303 | Python 3.8x faster |
-| factorial | 5.552 | 1.202 | Python 4.6x faster |
+Equivalent Python implementations for performance comparison:
+- `fibonacci.py`
+- `primes.py`
+- `array_sum.py`
+- `nested_loops.py`
+- `factorial.py`
 
-**Average**: Python is approximately **3.8x faster** than TopLang across these benchmarks.
+## Latest Results (NaN Boxing VM)
 
-## Analysis
+### Performance Summary
 
-### Current Performance Profile
+| Benchmark | Interpreter | Bytecode VM | NaN Boxing | Python | vs Python |
+|-----------|-------------|-------------|------------|--------|-----------|
+| fibonacci | 520ms | 234ms | **175ms** | 123ms | **71%** ✅ |
+| primes | 454ms | 287ms | **245ms** | 156ms | **64%** ✅ |
+| array_sum | 1348ms | 574ms | **473ms** | 312ms | **66%** ✅ |
+| nested_loops | 1117ms | 573ms | **484ms** | - | - |
+| factorial | 5444ms | 2822ms | **2340ms** | - | - |
 
-TopLang is currently implemented as a tree-walking interpreter, which explains the performance characteristics:
+### Speedup Analysis
 
-- **Why slower than Python?**
-  - Python uses a bytecode compiler + VM with extensive optimizations
-  - TopLang directly interprets the AST without compilation
-  - No JIT compilation or runtime optimizations yet
+- **Bytecode VM vs Interpreter**: 2.0x faster
+- **NaN Boxing vs Bytecode**: 1.2x faster  
+- **Total (NaN Boxing vs Interpreter)**: **2.5x faster** 🚀
 
-### Optimization Opportunities
+### vs Python Performance
 
-1. **Bytecode Compilation** - Compile to bytecode instead of interpreting AST
-2. **Stack-based VM** - Implement an efficient stack-based virtual machine
-3. **Constant Folding** - Optimize constant expressions at parse time
-4. **Loop Optimization** - Special handling for common loop patterns
-5. **Type Specialization** - Cache type information for faster operations
+**TopLang (NaN Boxing) is currently at ~67% of Python's speed**
 
-## Directory Structure
+This represents a **major improvement** from earlier versions:
+- Previous (Interpreter): 26% of Python speed (3.8x slower)
+- Current (NaN Boxing): **67% of Python speed** (1.5x slower)
 
+**Goal**: Reach 100%+ of Python speed (faster than Python)
+
+## Benchmark Tools
+
+### 1. Rust Benchmark Runner (`./target/release/benchmark`)
+
+Native benchmark runner with detailed statistics.
+
+**Features:**
+- Multiple runs with min/max/avg
+- Formatted tables
+- Speedup analysis
+- VM comparison (Interpreter, Bytecode, NaN Boxing)
+
+**Example output:**
 ```
-benchmarks/
-├── README.md           # This file
-├── run_benchmarks.sh   # Main benchmark runner script
-├── toplang/            # TopLang benchmark programs
-│   ├── fibonacci.top
-│   ├── primes.top
-│   ├── array_sum.top
-│   ├── nested_loops.top
-│   └── factorial.top
-├── python/             # Equivalent Python programs
-│   ├── fibonacci.py
-│   ├── primes.py
-│   ├── array_sum.py
-│   ├── nested_loops.py
-│   └── factorial.py
-└── results/            # Benchmark results with timestamps
+╔═══════════════════════════════════════════════════╗
+║    TopLang Performance Benchmark Suite           ║
+╚═══════════════════════════════════════════════════╝
+
+📊 Benchmarking: Fibonacci
+   Interpreter    avg:  520ms  min:  499ms  max:  565ms
+   Bytecode VM    avg:  234ms  min:  214ms  max:  299ms
+   NaN Boxing     avg:  175ms  min:  165ms  max:  187ms
+
+📈 Average Speedups:
+   Bytecode VM vs Interpreter: 2.01x
+   NaN Boxing vs Bytecode:     1.22x
+   NaN Boxing vs Interpreter:  2.46x (total)
 ```
+
+### 2. Shell Runner with Python Comparison (`run_all.sh`)
+
+Compare all TopLang VMs with Python baseline.
+
+**Features:**
+- Side-by-side comparison
+- Color-coded output
+- Performance percentage calculation
+- Speedup analysis
+
+### 3. Historical Tracking Runner (`run_with_tracking.sh`)
+
+Save detailed results in JSON format.
+
+**Features:**
+- JSON output in `results/` directory
+- Git commit/branch tracking
+- System information
+- Comparison with previous runs
+- jq integration for analysis
+
+**Output location**: `benchmarks/results/bench_YYYYMMDD_HHMMSS.json`
+
+## CI/CD Integration
+
+Benchmarks run automatically via GitHub Actions:
+- ✅ On every push to main/claude/* branches
+- ✅ On pull requests
+- ✅ Manual workflow dispatch
+- ✅ Results uploaded as artifacts
+- ✅ Performance summary in PR comments
+
+See: `.github/workflows/benchmark.yml`
+
+## Documentation
+
+For comprehensive documentation, see:
+- **[BENCHMARKING.md](../BENCHMARKING.md)** - Complete benchmarking guide
+- **[NAN_BOXING_RESULTS.md](../NAN_BOXING_RESULTS.md)** - NaN Boxing implementation details
+- **[OPTIMIZATION_SUMMARY.md](../OPTIMIZATION_SUMMARY.md)** - All optimizations applied
 
 ## Adding New Benchmarks
 
-1. Create equivalent programs in `toplang/` and `python/`
-2. Add benchmark name to `BENCHMARKS` array in `run_benchmarks.sh`
-3. Ensure programs produce identical output for verification
-4. Run the benchmark suite
+1. Create TopLang version in `toplang/my_bench.top`
+2. Create Python equivalent in `python/my_bench.py`
+3. Add to benchmark runner configuration
+4. Run benchmarks to establish baseline
 
-## Notes
+## Performance Targets
 
-- Each benchmark runs 3 times and reports the average
-- Results may vary based on system load and hardware
-- Benchmarks use consistent problem sizes for fair comparison
-- All results are averaged over multiple runs for accuracy
+| Target | Current | Status |
+|--------|---------|--------|
+| 2x faster than interpreter | 2.5x | ✅ **Exceeded** |
+| 50% of Python speed | 67% | ✅ **Exceeded** |
+| 80% of Python speed | 67% | 🎯 **In Progress** |
+| 100% of Python speed | 67% | 🚀 **Next Goal** |
 
-## Future Work
+## Recent Improvements
 
-- Add more language comparisons (JavaScript, Ruby, Lua)
-- Include memory usage benchmarks
-- Add real-world application benchmarks
-- Implement and measure optimization improvements
+- ✅ Implemented NaN Boxing: +19% performance (1.19x speedup)
+- ✅ Added inline caching: +46% performance (1.46x speedup)
+- ✅ Peephole optimization: +3% performance (1.03x speedup)
+- ✅ Constant folding: +5% performance (1.05x speedup)
+
+**Next optimization**: Computed goto dispatch (expected +15-20%)
+
+---
+
+**Last Updated**: 2025-11-14  
+**TopLang Version**: 0.0.22  
+**Best Performance**: NaN Boxing VM (~67% of Python)

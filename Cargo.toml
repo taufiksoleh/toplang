@@ -11,6 +11,10 @@ license = "MIT"
 name = "topc"
 path = "src/main.rs"
 
+[[bin]]
+name = "benchmark"
+path = "src/bin/benchmark_runner.rs"
+
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 anyhow = "1.0"

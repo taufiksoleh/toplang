@@ -101,15 +101,60 @@ jobs:
 
           if (results) {
             const data = JSON.parse(fs.readFileSync(`benchmarks/results/${results}`, 'utf8'));
-            
-            let comment = '## 📊 Benchmark Results\n\n';
-            comment += '| Benchmark | Interpreter | Bytecode | NaN Boxing | Speedup |\n';
-            comment += '|-----------|-------------|----------|------------|----------|\n';
-            
+
+            // Build performance table
+            let comment = '## 📊 Performance Benchmark Results\n\n';
+            comment += `**Commit:** \`${data.git_commit.substring(0, 7)}\`\n`;
+            comment += `**Branch:** \`${data.git_branch}\`\n`;
+            comment += `**Timestamp:** ${data.timestamp}\n\n`;
+
+            // Main performance table
+            comment += '### Execution Times\n\n';
+            comment += '| Benchmark | Interpreter | Bytecode | NaN Boxing | Python | \n';
+            comment += '|-----------|-------------|----------|------------|--------|\n';
+
+            let hasPython = false;
             for (const [name, bench] of Object.entries(data.benchmarks)) {
-              comment += `| ${name} | ${bench.interpreter.avg_ms}ms | ${bench.bytecode.avg_ms}ms | ${bench.nanbox.avg_ms}ms | ${bench.speedups.nanbox_vs_interp.toFixed(2)}x |\n`;
+              const pythonTime = bench.python ? `${bench.python.avg_ms}ms` : '-';
+              if (bench.python) hasPython = true;
+              comment += `| **${name}** | ${bench.interpreter.avg_ms}ms | ${bench.bytecode.avg_ms}ms | ${bench.nanbox.avg_ms}ms | ${pythonTime} |\n`;
             }
-            
+
+            // Speedup analysis table
+            comment += '\n### Speedup Analysis\n\n';
+            comment += '| Benchmark | Bytecode vs Interp | NanBox vs Bytecode | NanBox vs Interp | NanBox vs Python |\n';
+            comment += '|-----------|--------------------|--------------------|------------------|------------------|\n';
+
+            for (const [name, bench] of Object.entries(data.benchmarks)) {
+              const sp = bench.speedups;
+              const vsPython = sp.nanbox_vs_python > 0 ? `${sp.nanbox_vs_python.toFixed(2)}x (${(sp.nanbox_vs_python * 100).toFixed(1)}%)` : '-';
+              comment += `| **${name}** | ${sp.bytecode_vs_interp.toFixed(2)}x | ${sp.nanbox_vs_bytecode.toFixed(2)}x | ${sp.nanbox_vs_interp.toFixed(2)}x | ${vsPython} |\n`;
+            }
+
+            // Calculate averages
+            const benchmarks = Object.values(data.benchmarks);
+            const avgBytecodeSpeedup = (benchmarks.reduce((sum, b) => sum + b.speedups.bytecode_vs_interp, 0) / benchmarks.length).toFixed(2);
+            const avgNanboxSpeedup = (benchmarks.reduce((sum, b) => sum + b.speedups.nanbox_vs_bytecode, 0) / benchmarks.length).toFixed(2);
+            const avgTotalSpeedup = (benchmarks.reduce((sum, b) => sum + b.speedups.nanbox_vs_interp, 0) / benchmarks.length).toFixed(2);
+
+            comment += '\n### Summary\n\n';
+            comment += `- 🚀 **Bytecode optimization:** ${avgBytecodeSpeedup}x faster than interpreter\n`;
+            comment += `- ⚡ **NaN Boxing optimization:** ${avgNanboxSpeedup}x faster than bytecode\n`;
+            comment += `- 🎯 **Total speedup:** ${avgTotalSpeedup}x faster than interpreter\n`;
+
+            if (hasPython) {
+              const pythonBenchmarks = benchmarks.filter(b => b.speedups.nanbox_vs_python > 0);
+              if (pythonBenchmarks.length > 0) {
+                const avgVsPython = (pythonBenchmarks.reduce((sum, b) => sum + b.speedups.nanbox_vs_python, 0) / pythonBenchmarks.length).toFixed(2);
+                const percentOfPython = (parseFloat(avgVsPython) * 100).toFixed(1);
+
+                const emoji = percentOfPython >= 80 ? '🏆' : percentOfPython >= 50 ? '⚡' : '🔧';
+                comment += `- ${emoji} **Performance vs Python:** ${avgVsPython}x (${percentOfPython}% of Python's speed)\n`;
+              }
+            }
+
+            comment += `\n---\n*Benchmark ran ${data.runs_per_benchmark} times per configuration. Results show average execution time.*`;
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

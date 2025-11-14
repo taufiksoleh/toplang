@@ -1,8 +1,12 @@
-/// Direct-threaded VM dispatch for maximum performance
-///
-/// This module implements a direct-threaded interpreter that uses function pointers
-/// instead of a match statement, significantly improving branch prediction and
-/// reducing dispatch overhead.
+#![allow(dead_code)]
+
+//! Direct-threaded VM dispatch for maximum performance
+//!
+//! This module implements a direct-threaded interpreter that uses function pointers
+//! instead of a match statement, significantly improving branch prediction and
+//! reducing dispatch overhead.
+//!
+//! NOTE: This is an experimental implementation. Use vm_optimized.rs or vm_nanbox.rs instead.
 ///
 /// Performance gain: 1.3-1.5x faster than match-based dispatch
 use crate::bytecode::*;

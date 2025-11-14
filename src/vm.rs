@@ -1,7 +1,12 @@
-/// Virtual Machine for executing TopLang bytecode
-///
-/// This is a stack-based VM that executes bytecode instructions in a tight loop.
-/// This approach is much faster than walking the AST tree.
+#![allow(dead_code)]
+
+//! Virtual Machine for executing TopLang bytecode
+//!
+//! This is a stack-based VM that executes bytecode instructions in a tight loop.
+//! This approach is much faster than walking the AST tree.
+//!
+//! NOTE: This is a deprecated implementation. Use vm_optimized.rs or vm_nanbox.rs instead.
+
 use crate::bytecode::*;
 use anyhow::{anyhow, Result};
 use std::collections::HashMap;

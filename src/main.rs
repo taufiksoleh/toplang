@@ -24,10 +24,8 @@ use parser::Parser;
 use std::fs;
 use std::path::PathBuf;
 use std::process;
-use vm::VM;
 use vm_nanbox::NanBoxVM;
 use vm_optimized::OptimizedVM;
-use vm_threaded::ThreadedVM;
 
 #[derive(ClapParser)]
 #[command(name = "topc")]

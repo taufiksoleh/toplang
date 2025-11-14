@@ -3,12 +3,12 @@
 //!
 //! Runs benchmarks across multiple VM implementations and compares with Python
 
-use std::fs;
 use std::path::Path;
 use std::process::Command;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct BenchmarkResult {
     name: String,
     vm_type: String,

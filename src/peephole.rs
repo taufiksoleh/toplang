@@ -94,6 +94,7 @@ fn optimize_instructions(code: &mut Vec<Instruction>) {
 
 /// Optimize arithmetic operations in loops
 /// This looks for common loop patterns and optimizes them
+#[allow(dead_code)]
 pub fn optimize_loops(chunk: &mut Chunk) {
     let code = &mut chunk.code;
     let mut i = 0;
@@ -104,7 +105,7 @@ pub fn optimize_loops(chunk: &mut Chunk) {
         if i + 3 < code.len() {
             if let (
                 Instruction::LoadVar(var1),
-                Instruction::LoadConst(const_idx),
+                Instruction::LoadConst(_const_idx),
                 Instruction::Add,
                 Instruction::StoreVar(var2),
             ) = (&code[i], &code[i + 1], &code[i + 2], &code[i + 3])

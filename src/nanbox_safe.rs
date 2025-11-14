@@ -70,6 +70,7 @@ impl NanValue {
     }
 
     // Constant for stack initialization
+    #[allow(dead_code)]
     pub const NULL_VALUE: NanValue = NanValue(TAG_NULL);
 
     // ===== Type checks =====
@@ -85,6 +86,7 @@ impl NanValue {
     }
 
     #[inline]
+    #[allow(dead_code)]
     pub fn is_boolean(&self) -> bool {
         self.0 == TAG_TRUE || self.0 == TAG_FALSE
     }

@@ -1,0 +1,21 @@
+# Nested loops benchmark - test loop performance
+
+function main() {
+    var outer is 5000
+    var sum is 0
+    var i is 0
+
+    while i less than outer {
+        var j is 0
+        while j less than 1000 {
+            sum is sum plus 1
+            j is j plus 1
+        }
+        i is i plus 1
+    }
+
+    print "Nested loops result:"
+    print sum
+
+    return 0
+}

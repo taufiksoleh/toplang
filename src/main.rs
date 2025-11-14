@@ -1,18 +1,31 @@
 mod ast;
+mod bytecode;
+mod compiler;
 mod interpreter;
 mod lexer;
+mod nanbox;
+mod nanbox_safe;
+mod optimizer;
 mod parser;
+mod peephole;
 mod token;
+mod vm;
+mod vm_nanbox;
+mod vm_optimized;
+mod vm_threaded;
 
 use anyhow::{Context, Result};
 use clap::Parser as ClapParser;
 use colored::Colorize;
+use compiler::Compiler;
 use interpreter::Interpreter;
 use lexer::Lexer;
 use parser::Parser;
 use std::fs;
 use std::path::PathBuf;
 use std::process;
+use vm_nanbox::NanBoxVM;
+use vm_optimized::OptimizedVM;
 
 #[derive(ClapParser)]
 #[command(name = "topc")]
@@ -35,6 +48,22 @@ struct Cli {
     /// Enable verbose output
     #[arg(short, long)]
     verbose: bool,
+
+    /// Use bytecode compiler and VM (faster execution)
+    #[arg(short = 'b', long)]
+    bytecode: bool,
+
+    /// Show compiled bytecode (requires --bytecode)
+    #[arg(long)]
+    show_bytecode: bool,
+
+    /// Debug VM execution (requires --bytecode)
+    #[arg(long)]
+    debug_vm: bool,
+
+    /// Use NaN-boxed VM for maximum performance (requires --bytecode)
+    #[arg(long)]
+    nanbox: bool,
 }
 
 fn main() {
@@ -85,16 +114,74 @@ fn run(cli: Cli) -> Result<()> {
         println!();
     }
 
-    // Interpretation
-    if cli.verbose {
-        println!("{}", "Executing...".blue().bold());
-        println!();
-    }
+    // Execution: Choose between interpreter or VM
+    let exit_code = if cli.bytecode {
+        // Bytecode compilation
+        if cli.verbose {
+            println!("{}", "Compiling to bytecode...".blue().bold());
+        }
 
-    let mut interpreter = Interpreter::new();
-    let exit_code = interpreter
-        .interpret(program)
-        .with_context(|| "Runtime error")?;
+        let mut compiler = Compiler::new();
+        let chunk = compiler
+            .compile(program)
+            .with_context(|| "Failed to compile to bytecode")?;
+
+        if cli.show_bytecode {
+            println!("\n{}", "=== Bytecode ===".yellow().bold());
+            chunk.disassemble("main");
+            for (name, func_chunk) in &chunk.functions {
+                println!();
+                func_chunk.disassemble(name);
+            }
+            println!();
+        }
+
+        // Execute with VM - choose between NaN-boxed or standard optimized VM
+        if cli.nanbox {
+            // Use NaN-boxed VM for maximum performance
+            if cli.verbose {
+                println!(
+                    "{}",
+                    "Executing with NaN-boxed VM (maximum performance)..."
+                        .blue()
+                        .bold()
+                );
+                println!();
+            }
+
+            let mut vm = NanBoxVM::new();
+            if cli.debug_vm {
+                vm.set_debug(true);
+            }
+
+            vm.execute(chunk)
+                .with_context(|| "NaN-boxed VM runtime error")?
+        } else {
+            // Use standard optimized VM
+            if cli.verbose {
+                println!("{}", "Executing with optimized VM...".blue().bold());
+                println!();
+            }
+
+            let mut vm = OptimizedVM::new();
+            if cli.debug_vm {
+                vm.set_debug(true);
+            }
+
+            vm.execute(chunk).with_context(|| "VM runtime error")?
+        }
+    } else {
+        // Use traditional tree-walking interpreter
+        if cli.verbose {
+            println!("{}", "Executing with interpreter...".blue().bold());
+            println!();
+        }
+
+        let mut interpreter = Interpreter::new();
+        interpreter
+            .interpret(program)
+            .with_context(|| "Runtime error")?
+    };
 
     if cli.verbose {
         println!(

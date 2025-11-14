@@ -1,0 +1,154 @@
+name: Performance Benchmarks
+
+on:
+  push:
+    branches: [ main, master, claude/* ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  benchmark:
+    name: Run Performance Benchmarks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        profile: minimal
+        override: true
+
+    - name: Cache Cargo dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc jq time
+
+    - name: Build release binaries
+      run: cargo build --release --all-targets
+
+    - name: Make benchmark scripts executable
+      run: |
+        chmod +x benchmarks/run_all.sh
+        chmod +x benchmarks/run_with_tracking.sh
+        chmod +x benchmarks/python/*.py
+
+    - name: Run benchmarks with tracking
+      run: ./benchmarks/run_with_tracking.sh
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results-${{ github.sha }}
+        path: benchmarks/results/*.json
+
+    - name: Display results summary
+      run: |
+        if [ -f benchmarks/results/bench_*.json ]; then
+          LATEST=$(ls -t benchmarks/results/bench_*.json | head -1)
+          echo "### Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+          cat "$LATEST" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+          if command -v jq &> /dev/null; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Performance Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            avg_total=$(jq '.benchmarks | to_entries | map(.value.speedups.nanbox_vs_interp) | add / length' "$LATEST")
+            avg_vs_python=$(jq '.benchmarks | to_entries | map(select(.value.speedups.nanbox_vs_python > 0) | .value.speedups.nanbox_vs_python) | add / length' "$LATEST")
+
+            echo "- **Total Speedup (NaN Boxing vs Interpreter):** ${avg_total}x" >> $GITHUB_STEP_SUMMARY
+            echo "- **Performance vs Python:** ${avg_vs_python}x ($(echo "$avg_vs_python * 100" | bc)%)" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const results = fs.readdirSync('benchmarks/results')
+            .filter(f => f.startsWith('bench_'))
+            .sort()
+            .reverse()[0];
+
+          if (results) {
+            const data = JSON.parse(fs.readFileSync(`benchmarks/results/${results}`, 'utf8'));
+            
+            let comment = '## 📊 Benchmark Results\n\n';
+            comment += '| Benchmark | Interpreter | Bytecode | NaN Boxing | Speedup |\n';
+            comment += '|-----------|-------------|----------|------------|----------|\n';
+            
+            for (const [name, bench] of Object.entries(data.benchmarks)) {
+              comment += `| ${name} | ${bench.interpreter.avg_ms}ms | ${bench.bytecode.avg_ms}ms | ${bench.nanbox.avg_ms}ms | ${bench.speedups.nanbox_vs_interp.toFixed(2)}x |\n`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          }
+
+  benchmark-comparison:
+    name: Historical Comparison
+    runs-on: ubuntu-latest
+    needs: benchmark
+    if: github.event_name == 'push'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for comparison
+
+    - name: Download current results
+      uses: actions/download-artifact@v4
+      with:
+        name: benchmark-results-${{ github.sha }}
+        path: benchmarks/results/current
+
+    - name: Download previous results
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: benchmark-results
+        path: benchmarks/results/previous
+
+    - name: Compare results
+      run: |
+        if [ -d benchmarks/results/previous ]; then
+          echo "Comparing with previous benchmark run..."
+          # TODO: Add comparison logic here
+          echo "Comparison not yet implemented"
+        else
+          echo "No previous results found for comparison"
+        fi

@@ -2,7 +2,6 @@
 ///
 /// This module provides the runtime support functions that compiled
 /// TopLang programs need (print, input, array operations, etc.)
-
 use std::io::{self, Write};
 
 /// Value type for runtime (NaN-boxed for performance)

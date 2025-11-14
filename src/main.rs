@@ -187,11 +187,7 @@ fn run(cli: Cli) -> Result<()> {
             .with_context(|| format!("Failed to write C file: {}", c_file.display()))?;
 
         if cli.verbose {
-            println!(
-                "{} {}",
-                "Generated C file:".blue().bold(),
-                c_file.display()
-            );
+            println!("{} {}", "Generated C file:".blue().bold(), c_file.display());
         }
 
         // Compile C code with optimizations
@@ -230,7 +226,11 @@ fn run(cli: Cli) -> Result<()> {
                 0
             }
             Ok(status) => {
-                eprintln!("{} Compilation failed with status: {}", "Error:".red().bold(), status);
+                eprintln!(
+                    "{} Compilation failed with status: {}",
+                    "Error:".red().bold(),
+                    status
+                );
                 if cli.verbose {
                     eprintln!("The generated C file is at: {}", c_file.display());
                 }

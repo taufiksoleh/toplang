@@ -155,20 +155,20 @@ for bench_config in "${BENCHMARKS[@]}"; do
     python="${results[${name}_python]}"
 
     if [ -n "$interp" ] && [ -n "$bytecode" ] && [ "$interp" != "N/A" ] && [ "$bytecode" != "N/A" ]; then
-        speedup1=$(echo "scale=2; $interp / $bytecode" | bc)
+        speedup1=$(echo "scale=2; $interp / $bytecode" | bc | awk '{printf "%.2f", $0}')
     else
         speedup1="N/A"
     fi
 
     if [ -n "$bytecode" ] && [ -n "$nanbox" ] && [ "$bytecode" != "N/A" ] && [ "$nanbox" != "N/A" ]; then
-        speedup2=$(echo "scale=2; $bytecode / $nanbox" | bc)
+        speedup2=$(echo "scale=2; $bytecode / $nanbox" | bc | awk '{printf "%.2f", $0}')
     else
         speedup2="N/A"
     fi
 
     if [ -n "$nanbox" ] && [ -n "$python" ] && [ "$nanbox" != "N/A" ] && [ "$python" != "N/A" ]; then
-        speedup3=$(echo "scale=2; $nanbox / $python" | bc)
-        percent=$(echo "scale=1; ($nanbox / $python) * 100" | bc)
+        speedup3=$(echo "scale=2; $nanbox / $python" | bc | awk '{printf "%.2f", $0}')
+        percent=$(echo "scale=1; ($nanbox / $python) * 100" | bc | awk '{printf "%.1f", $0}')
     else
         speedup3="N/A"
         percent="N/A"
@@ -195,10 +195,10 @@ echo ""
 
 # Print averages
 if [ $count -gt 0 ]; then
-    avg1=$(echo "scale=2; $total_speedup1 / $count" | bc)
-    avg2=$(echo "scale=2; $total_speedup2 / $count" | bc)
-    avg3=$(echo "scale=2; $total_speedup3 / $count" | bc)
-    avg_percent=$(echo "scale=1; ($avg3) * 100" | bc)
+    avg1=$(echo "scale=2; $total_speedup1 / $count" | bc | awk '{printf "%.2f", $0}')
+    avg2=$(echo "scale=2; $total_speedup2 / $count" | bc | awk '{printf "%.2f", $0}')
+    avg3=$(echo "scale=2; $total_speedup3 / $count" | bc | awk '{printf "%.2f", $0}')
+    avg_percent=$(echo "scale=1; ($avg3) * 100" | bc | awk '{printf "%.1f", $0}')
 
     echo -e "${BLUE}📈 Average Speedups:${NC}"
     echo -e "   Bytecode vs Interpreter:  ${GREEN}${avg1}x${NC}"

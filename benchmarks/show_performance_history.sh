@@ -2,6 +2,24 @@
 
 # Performance History Analyzer
 # Displays historical benchmark data from CSV file
+#
+# Shows:
+# - Total benchmark runs recorded
+# - Recent performance (last 10 runs) with comparison
+# - Performance improvement/regression over time
+# - Best native performance achieved
+#
+# Expected Output:
+# - Native performance should be 115-135x faster than interpreter
+# - Compilation time should be 200-300ms
+# - Performance should be stable across runs (±5%)
+#
+# Usage:
+#   ./benchmarks/show_performance_history.sh
+#
+# CSV Format:
+#   Date,Time,Commit,Branch,Benchmark,Interpreter_ms,VM_ms,Native_ms,
+#   Compile_ms,Native_vs_Interp,Native_vs_VM,System,Compiler
 
 CSV_FILE="benchmarks/results/performance_history.csv"
 

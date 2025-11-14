@@ -3,6 +3,23 @@
 # Native Compilation Benchmark Runner with Historical Tracking
 # Compares: Interpreter vs Bytecode VM vs Native Compiled
 # Saves results in CSV format for historical analysis
+#
+# Expected Performance Ranges (based on historical data):
+#
+# | Benchmark      | Interpreter | VM     | Native | Expected Speedup |
+# |----------------|-------------|--------|--------|------------------|
+# | fibonacci      | ~500ms      | ~180ms | ~15ms  | 30-40x faster    |
+# | primes         | ~470ms      | ~250ms | ~14ms  | 30-40x faster    |
+# | array_sum      | ~1300ms     | ~500ms | ~15ms  | 80-100x faster   |
+# | nested_loops   | ~1100ms     | ~500ms | ~16ms  | 65-85x faster    |
+# | factorial      | ~5300ms     | ~2400ms| ~16ms  | 300-350x faster  |
+# | AVERAGE        | ~1760ms     | ~768ms | ~15ms  | 115-135x faster  |
+#
+# Compilation time: 200-300ms per benchmark
+# System: Linux x86_64, GCC 13.3.0 with -O3 -march=native -ffast-math
+#
+# CSV Output: benchmarks/results/performance_history.csv
+# Text Output: benchmarks/results/native_results_YYYYMMDD_HHMMSS.txt
 
 set -e
 

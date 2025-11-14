@@ -1,0 +1,76 @@
+TopLang Native Compilation Benchmark Results
+Generated: Fri Nov 14 18:38:46 UTC 2025
+Git Commit: 4cc5a09
+Git Branch: claude/aggressive-performance-improvements-01JpbKJQULt3ijGDf7f2C41N
+System: Linux x86_64
+Compiler: cc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0
+============================================================
+
+================================================
+Benchmark: fibonacci
+  Interpreter:     .512009701s (512ms)
+  Bytecode VM:     .187393176s (187ms)
+  Native Compiled: .016317701s (16ms)
+  Compile Time:    .281453132s (281ms)
+  Speedups:
+    VM vs Interpreter:     2.73x
+    Native vs Interpreter: 31.37x
+    Native vs VM:          11.48x
+
+================================================
+Benchmark: primes
+  Interpreter:     .483086409s (483ms)
+  Bytecode VM:     .253906559s (253ms)
+  Native Compiled: .014315133s (14ms)
+  Compile Time:    .274355282s (274ms)
+  Speedups:
+    VM vs Interpreter:     1.90x
+    Native vs Interpreter: 33.74x
+    Native vs VM:          17.73x
+
+================================================
+Benchmark: array_sum
+  Interpreter:     1.353706493s (1353ms)
+  Bytecode VM:     .501724728s (501ms)
+  Native Compiled: .015655229s (15ms)
+  Compile Time:    .262148597s (262ms)
+  Speedups:
+    VM vs Interpreter:     2.69x
+    Native vs Interpreter: 86.46x
+    Native vs VM:          32.04x
+
+================================================
+Benchmark: nested_loops
+  Interpreter:     1.101846502s (1101ms)
+  Bytecode VM:     .489933231s (489ms)
+  Native Compiled: .016103017s (16ms)
+  Compile Time:    .237810177s (237ms)
+  Speedups:
+    VM vs Interpreter:     2.24x
+    Native vs Interpreter: 68.42x
+    Native vs VM:          30.42x
+
+================================================
+Benchmark: factorial
+  Interpreter:     5.350414291s (5350ms)
+  Bytecode VM:     2.408290085s (2408ms)
+  Native Compiled: .016739635s (16ms)
+  Compile Time:    .248428431s (248ms)
+  Speedups:
+    VM vs Interpreter:     2.22x
+    Native vs Interpreter: 319.62x
+    Native vs VM:          143.86x
+
+================================================
+SUMMARY
+================================================
+Average Execution Times:
+  Interpreter:     1.760s (1760ms)
+  Bytecode VM:     .768s (768ms)
+  Native Compiled: .015s (15ms)
+  Compile Time:    .260s (260ms)
+
+Average Speedups:
+  VM vs Interpreter:     2.29x faster
+  Native vs Interpreter: 117.33x faster
+  Native vs VM:          51.20x faster

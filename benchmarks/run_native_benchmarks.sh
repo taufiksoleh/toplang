@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Native Compilation Benchmark Runner
+# Native Compilation Benchmark Runner with Historical Tracking
 # Compares: Interpreter vs Bytecode VM vs Native Compiled
+# Saves results in CSV format for historical analysis
 
 set -e
 
@@ -18,10 +19,14 @@ NC='\033[0m' # No Color
 RESULTS_DIR="benchmarks/results"
 mkdir -p "$RESULTS_DIR"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+DATE=$(date +%Y-%m-%d)
+TIME=$(date +%H:%M:%S)
 RESULTS_FILE="${RESULTS_DIR}/native_results_${TIMESTAMP}.txt"
+CSV_FILE="${RESULTS_DIR}/performance_history.csv"
 
 echo -e "${BLUE}============================================================${NC}"
 echo -e "${BLUE}    TopLang Native Compilation Benchmark Suite${NC}"
+echo -e "${BLUE}    With Historical Performance Tracking${NC}"
 echo -e "${BLUE}============================================================${NC}"
 echo ""
 
@@ -40,23 +45,39 @@ if ! command -v cc &> /dev/null; then
     exit 1
 fi
 
-# Benchmarks to run (simple ones first that don't require function calls)
+# Get system info
+SYSTEM_INFO="$(uname -s) $(uname -m)"
+COMPILER_INFO="$(cc --version | head -1)"
+GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+
+# Create CSV header if file doesn't exist
+if [ ! -f "$CSV_FILE" ]; then
+    echo "Date,Time,Commit,Branch,Benchmark,Interpreter_ms,VM_ms,Native_ms,Compile_ms,Native_vs_Interp,Native_vs_VM,System,Compiler" > "$CSV_FILE"
+    echo -e "${CYAN}Created new performance history file: $CSV_FILE${NC}"
+fi
+
+# Benchmarks to run
 BENCHMARKS=("fibonacci" "primes" "array_sum" "nested_loops" "factorial")
 
 # Initialize results file
 {
     echo "TopLang Native Compilation Benchmark Results"
     echo "Generated: $(date)"
-    echo "System: $(uname -s) $(uname -m)"
-    echo "Compiler: $(cc --version | head -1)"
+    echo "Git Commit: $GIT_COMMIT"
+    echo "Git Branch: $GIT_BRANCH"
+    echo "System: $SYSTEM_INFO"
+    echo "Compiler: $COMPILER_INFO"
     echo "============================================================"
     echo ""
 } > "$RESULTS_FILE"
 
 # Print header
-echo -e "${CYAN}Execution Time Comparison:${NC}"
+printf "${CYAN}Historical Performance Tracking Enabled${NC}\n"
+printf "${CYAN}Results will be saved to: $CSV_FILE${NC}\n"
+echo ""
 printf "${BLUE}%-15s %-12s %-12s %-12s %-12s %-12s${NC}\n" \
-    "Benchmark" "Interp(s)" "VM(s)" "Native(s)" "VM vs I" "Native vs I"
+    "Benchmark" "Interp(ms)" "VM(ms)" "Native(ms)" "Native/I" "Native/VM"
 echo "--------------------------------------------------------------------------------"
 
 # Arrays to store results for summary
@@ -76,7 +97,6 @@ for benchmark in "${BENCHMARKS[@]}"; do
     rm -f "$NATIVE_BIN" "${NATIVE_BIN}.c"
 
     # Measure compilation time for native
-    echo -e "  ${CYAN}Compiling to native...${NC}"
     COMPILE_START=$(date +%s.%N)
     ./target/release/topc --compile "$TOPLANG_FILE" -o "$NATIVE_BIN" > /dev/null 2>&1 || {
         echo -e "${RED}  Compilation failed for $benchmark${NC}"
@@ -84,9 +104,9 @@ for benchmark in "${BENCHMARKS[@]}"; do
     }
     COMPILE_END=$(date +%s.%N)
     COMPILE_TIME=$(echo "$COMPILE_END - $COMPILE_START" | bc)
+    COMPILE_MS=$(echo "$COMPILE_TIME * 1000" | bc | cut -d. -f1)
 
     # Time Interpreter (5 runs, take median)
-    echo -e "  ${CYAN}Running interpreter...${NC}"
     INTERP_RUNS=()
     for i in {1..5}; do
         START=$(date +%s.%N)
@@ -95,12 +115,11 @@ for benchmark in "${BENCHMARKS[@]}"; do
         DURATION=$(echo "$END - $START" | bc)
         INTERP_RUNS+=($DURATION)
     done
-    # Sort and take median
     IFS=$'\n' INTERP_SORTED=($(sort -n <<<"${INTERP_RUNS[*]}"))
     INTERP_TIME=${INTERP_SORTED[2]}
+    INTERP_MS=$(echo "$INTERP_TIME * 1000" | bc | cut -d. -f1)
 
     # Time Bytecode VM (5 runs, take median)
-    echo -e "  ${CYAN}Running bytecode VM...${NC}"
     VM_RUNS=()
     for i in {1..5}; do
         START=$(date +%s.%N)
@@ -111,9 +130,9 @@ for benchmark in "${BENCHMARKS[@]}"; do
     done
     IFS=$'\n' VM_SORTED=($(sort -n <<<"${VM_RUNS[*]}"))
     VM_TIME=${VM_SORTED[2]}
+    VM_MS=$(echo "$VM_TIME * 1000" | bc | cut -d. -f1)
 
-    # Time Native (10 runs, take median - native is fast so more runs)
-    echo -e "  ${CYAN}Running native binary...${NC}"
+    # Time Native (10 runs, take median)
     NATIVE_RUNS=()
     for i in {1..10}; do
         START=$(date +%s.%N)
@@ -124,6 +143,7 @@ for benchmark in "${BENCHMARKS[@]}"; do
     done
     IFS=$'\n' NATIVE_SORTED=($(sort -n <<<"${NATIVE_RUNS[*]}"))
     NATIVE_TIME=${NATIVE_SORTED[5]}
+    NATIVE_MS=$(echo "$NATIVE_TIME * 1000" | bc | cut -d. -f1)
 
     # Store for summary
     INTERP_TIMES+=($INTERP_TIME)
@@ -147,9 +167,9 @@ for benchmark in "${BENCHMARKS[@]}"; do
     fi
 
     # Color based on native speedup
-    if (( $(echo "$NATIVE_SPEEDUP > 10" | bc -l) )); then
+    if (( $(echo "$NATIVE_SPEEDUP > 100" | bc -l) )); then
         COLOR=$GREEN
-    elif (( $(echo "$NATIVE_SPEEDUP > 5" | bc -l) )); then
+    elif (( $(echo "$NATIVE_SPEEDUP > 50" | bc -l) )); then
         COLOR=$CYAN
     else
         COLOR=$YELLOW
@@ -158,20 +178,23 @@ for benchmark in "${BENCHMARKS[@]}"; do
     # Print results
     printf "${COLOR}%-15s %-12s %-12s %-12s %-12s %-12s${NC}\n" \
         "$benchmark" \
-        "$INTERP_TIME" \
-        "$VM_TIME" \
-        "$NATIVE_TIME" \
-        "${VM_SPEEDUP}x" \
-        "${NATIVE_SPEEDUP}x"
+        "$INTERP_MS" \
+        "$VM_MS" \
+        "$NATIVE_MS" \
+        "${NATIVE_SPEEDUP}x" \
+        "${NATIVE_VS_VM}x"
 
-    # Save to file
+    # Save to CSV (historical data)
+    echo "$DATE,$TIME,$GIT_COMMIT,$GIT_BRANCH,$benchmark,$INTERP_MS,$VM_MS,$NATIVE_MS,$COMPILE_MS,$NATIVE_SPEEDUP,$NATIVE_VS_VM,$SYSTEM_INFO,$COMPILER_INFO" >> "$CSV_FILE"
+
+    # Save to text file
     {
         echo "================================================"
         echo "Benchmark: $benchmark"
-        echo "  Interpreter:     ${INTERP_TIME}s"
-        echo "  Bytecode VM:     ${VM_TIME}s"
-        echo "  Native Compiled: ${NATIVE_TIME}s"
-        echo "  Compile Time:    ${COMPILE_TIME}s"
+        echo "  Interpreter:     ${INTERP_TIME}s (${INTERP_MS}ms)"
+        echo "  Bytecode VM:     ${VM_TIME}s (${VM_MS}ms)"
+        echo "  Native Compiled: ${NATIVE_TIME}s (${NATIVE_MS}ms)"
+        echo "  Compile Time:    ${COMPILE_TIME}s (${COMPILE_MS}ms)"
         echo "  Speedups:"
         echo "    VM vs Interpreter:     ${VM_SPEEDUP}x"
         echo "    Native vs Interpreter: ${NATIVE_SPEEDUP}x"
@@ -190,33 +213,34 @@ echo "--------------------------------------------------------------------------
 TOTAL_BENCHMARKS=${#INTERP_TIMES[@]}
 
 if [ $TOTAL_BENCHMARKS -gt 0 ]; then
-    # Average interpreter time
+    # Average times
     AVG_INTERP=0
     for time in "${INTERP_TIMES[@]}"; do
         AVG_INTERP=$(echo "$AVG_INTERP + $time" | bc)
     done
     AVG_INTERP=$(echo "scale=3; $AVG_INTERP / $TOTAL_BENCHMARKS" | bc)
+    AVG_INTERP_MS=$(echo "$AVG_INTERP * 1000" | bc | cut -d. -f1)
 
-    # Average VM time
     AVG_VM=0
     for time in "${VM_TIMES[@]}"; do
         AVG_VM=$(echo "$AVG_VM + $time" | bc)
     done
     AVG_VM=$(echo "scale=3; $AVG_VM / $TOTAL_BENCHMARKS" | bc)
+    AVG_VM_MS=$(echo "$AVG_VM * 1000" | bc | cut -d. -f1)
 
-    # Average native time
     AVG_NATIVE=0
     for time in "${NATIVE_TIMES[@]}"; do
         AVG_NATIVE=$(echo "$AVG_NATIVE + $time" | bc)
     done
     AVG_NATIVE=$(echo "scale=3; $AVG_NATIVE / $TOTAL_BENCHMARKS" | bc)
+    AVG_NATIVE_MS=$(echo "$AVG_NATIVE * 1000" | bc | cut -d. -f1)
 
-    # Average compile time
     AVG_COMPILE=0
     for time in "${COMPILE_TIMES[@]}"; do
         AVG_COMPILE=$(echo "$AVG_COMPILE + $time" | bc)
     done
     AVG_COMPILE=$(echo "scale=3; $AVG_COMPILE / $TOTAL_BENCHMARKS" | bc)
+    AVG_COMPILE_MS=$(echo "$AVG_COMPILE * 1000" | bc | cut -d. -f1)
 
     # Calculate average speedups
     AVG_VM_SPEEDUP=$(echo "scale=2; $AVG_INTERP / $AVG_VM" | bc)
@@ -224,12 +248,15 @@ if [ $TOTAL_BENCHMARKS -gt 0 ]; then
     AVG_NATIVE_VS_VM=$(echo "scale=2; $AVG_VM / $AVG_NATIVE" | bc)
 
     echo -e "${MAGENTA}Summary:${NC}"
-    printf "${BLUE}%-15s %-12s %-12s %-12s${NC}\n" "" "Avg Time(s)" "vs Interp" "vs VM"
+    printf "${BLUE}%-15s %-12s %-12s %-12s${NC}\n" "" "Avg Time(ms)" "vs Interp" "vs VM"
     echo "--------------------------------------------------------------------------------"
-    printf "%-15s ${YELLOW}%-12s${NC} %-12s %-12s\n" "Interpreter" "$AVG_INTERP" "1.00x" "-"
-    printf "%-15s ${CYAN}%-12s${NC} ${GREEN}%-12s${NC} %-12s\n" "Bytecode VM" "$AVG_VM" "${AVG_VM_SPEEDUP}x" "1.00x"
-    printf "%-15s ${GREEN}%-12s${NC} ${GREEN}%-12s${NC} ${GREEN}%-12s${NC}\n" "Native" "$AVG_NATIVE" "${AVG_NATIVE_SPEEDUP}x" "${AVG_NATIVE_VS_VM}x"
-    printf "%-15s %-12s %-12s %-12s\n" "Compile Time" "$AVG_COMPILE" "-" "-"
+    printf "%-15s ${YELLOW}%-12s${NC} %-12s %-12s\n" "Interpreter" "$AVG_INTERP_MS" "1.00x" "-"
+    printf "%-15s ${CYAN}%-12s${NC} ${GREEN}%-12s${NC} %-12s\n" "Bytecode VM" "$AVG_VM_MS" "${AVG_VM_SPEEDUP}x" "1.00x"
+    printf "%-15s ${GREEN}%-12s${NC} ${GREEN}%-12s${NC} ${GREEN}%-12s${NC}\n" "Native" "$AVG_NATIVE_MS" "${AVG_NATIVE_SPEEDUP}x" "${AVG_NATIVE_VS_VM}x"
+    printf "%-15s %-12s %-12s %-12s\n" "Compile Time" "$AVG_COMPILE_MS" "-" "-"
+
+    # Save summary to CSV
+    echo "$DATE,$TIME,$GIT_COMMIT,$GIT_BRANCH,AVERAGE,$AVG_INTERP_MS,$AVG_VM_MS,$AVG_NATIVE_MS,$AVG_COMPILE_MS,$AVG_NATIVE_SPEEDUP,$AVG_NATIVE_VS_VM,$SYSTEM_INFO,$COMPILER_INFO" >> "$CSV_FILE"
 
     # Save summary to file
     {
@@ -237,48 +264,29 @@ if [ $TOTAL_BENCHMARKS -gt 0 ]; then
         echo "SUMMARY"
         echo "================================================"
         echo "Average Execution Times:"
-        echo "  Interpreter:     ${AVG_INTERP}s"
-        echo "  Bytecode VM:     ${AVG_VM}s"
-        echo "  Native Compiled: ${AVG_NATIVE}s"
-        echo "  Compile Time:    ${AVG_COMPILE}s"
+        echo "  Interpreter:     ${AVG_INTERP}s (${AVG_INTERP_MS}ms)"
+        echo "  Bytecode VM:     ${AVG_VM}s (${AVG_VM_MS}ms)"
+        echo "  Native Compiled: ${AVG_NATIVE}s (${AVG_NATIVE_MS}ms)"
+        echo "  Compile Time:    ${AVG_COMPILE}s (${AVG_COMPILE_MS}ms)"
         echo ""
         echo "Average Speedups:"
         echo "  VM vs Interpreter:     ${AVG_VM_SPEEDUP}x faster"
         echo "  Native vs Interpreter: ${AVG_NATIVE_SPEEDUP}x faster"
         echo "  Native vs VM:          ${AVG_NATIVE_VS_VM}x faster"
-        echo ""
-        echo "Key Insights:"
-        if (( $(echo "$AVG_NATIVE_SPEEDUP > 10" | bc -l) )); then
-            echo "  🚀 Native compilation provides EXCELLENT performance!"
-            echo "     More than 10x faster than interpretation."
-        elif (( $(echo "$AVG_NATIVE_SPEEDUP > 5" | bc -l) )); then
-            echo "  ✨ Native compilation provides GREAT performance!"
-            echo "     5-10x faster than interpretation."
-        else
-            echo "  ✓ Native compilation provides good performance."
-        fi
-
-        if (( $(echo "$AVG_COMPILE < 0.1" | bc -l) )); then
-            echo "  ⚡ Compilation is VERY fast (< 0.1s average)"
-        elif (( $(echo "$AVG_COMPILE < 0.5" | bc -l) )); then
-            echo "  ⚡ Compilation is fast (< 0.5s average)"
-        fi
     } >> "$RESULTS_FILE"
 fi
 
 echo ""
 echo "--------------------------------------------------------------------------------"
 echo -e "${GREEN}✓ Benchmark completed!${NC}"
-echo -e "${BLUE}Results saved to: $RESULTS_FILE${NC}"
+echo -e "${BLUE}Results saved to:${NC}"
+echo -e "  ${CYAN}Text: $RESULTS_FILE${NC}"
+echo -e "  ${CYAN}CSV:  $CSV_FILE${NC}"
+echo ""
+echo -e "${MAGENTA}📊 Historical data now available in CSV format${NC}"
+echo -e "${MAGENTA}   View trends: cat $CSV_FILE | grep AVERAGE${NC}"
 echo ""
 
-# Display key insight
-if (( $(echo "$AVG_NATIVE_SPEEDUP > 10" | bc -l) )); then
-    echo -e "${GREEN}🚀 Native compilation is ${AVG_NATIVE_SPEEDUP}x faster than interpretation!${NC}"
-    echo -e "${GREEN}   This is a MASSIVE performance improvement!${NC}"
-elif (( $(echo "$AVG_NATIVE_SPEEDUP > 5" | bc -l) )); then
-    echo -e "${CYAN}✨ Native compilation is ${AVG_NATIVE_SPEEDUP}x faster than interpretation!${NC}"
-    echo -e "${CYAN}   This is a significant performance boost!${NC}"
+if (( $(echo "$AVG_NATIVE_SPEEDUP > 100" | bc -l) )); then
+    echo -e "${GREEN}🚀 Native compilation is ${AVG_NATIVE_SPEEDUP}x faster!${NC}"
 fi
-
-echo ""

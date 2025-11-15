@@ -210,19 +210,31 @@ impl CCodeGen {
         writeln!(&mut self.output, "    }}").unwrap();
         writeln!(&mut self.output).unwrap();
         writeln!(&mut self.output, "    char buffer[1024];").unwrap();
-        writeln!(&mut self.output, "    if (!fgets(buffer, sizeof(buffer), stdin)) {{").unwrap();
+        writeln!(
+            &mut self.output,
+            "    if (!fgets(buffer, sizeof(buffer), stdin)) {{"
+        )
+        .unwrap();
         writeln!(&mut self.output, "        return make_string(\"\");").unwrap();
         writeln!(&mut self.output, "    }}").unwrap();
         writeln!(&mut self.output).unwrap();
         writeln!(&mut self.output, "    // Remove trailing newline").unwrap();
         writeln!(&mut self.output, "    size_t len = strlen(buffer);").unwrap();
-        writeln!(&mut self.output, "    if (len > 0 && buffer[len-1] == '\\n') {{").unwrap();
+        writeln!(
+            &mut self.output,
+            "    if (len > 0 && buffer[len-1] == '\\n') {{"
+        )
+        .unwrap();
         writeln!(&mut self.output, "        buffer[len-1] = '\\0';").unwrap();
         writeln!(&mut self.output, "    }}").unwrap();
         writeln!(&mut self.output).unwrap();
         writeln!(&mut self.output, "    // Try to parse as number").unwrap();
         writeln!(&mut self.output, "    char* endptr;").unwrap();
-        writeln!(&mut self.output, "    double num = strtod(buffer, &endptr);").unwrap();
+        writeln!(
+            &mut self.output,
+            "    double num = strtod(buffer, &endptr);"
+        )
+        .unwrap();
         writeln!(&mut self.output, "    if (*buffer && !*endptr) {{").unwrap();
         writeln!(&mut self.output, "        return make_number(num);").unwrap();
         writeln!(&mut self.output, "    }}").unwrap();
@@ -244,15 +256,35 @@ impl CCodeGen {
         writeln!(&mut self.output, "int global_count = 0;").unwrap();
         writeln!(&mut self.output).unwrap();
         writeln!(&mut self.output, "Value* get_global(const char* name) {{").unwrap();
-        writeln!(&mut self.output, "    for (int i = 0; i < global_count; i++) {{").unwrap();
-        writeln!(&mut self.output, "        if (strcmp(globals[i].name, name) == 0) {{").unwrap();
+        writeln!(
+            &mut self.output,
+            "    for (int i = 0; i < global_count; i++) {{"
+        )
+        .unwrap();
+        writeln!(
+            &mut self.output,
+            "        if (strcmp(globals[i].name, name) == 0) {{"
+        )
+        .unwrap();
         writeln!(&mut self.output, "            return &globals[i].value;").unwrap();
         writeln!(&mut self.output, "        }}").unwrap();
         writeln!(&mut self.output, "    }}").unwrap();
         writeln!(&mut self.output, "    if (global_count < MAX_GLOBALS) {{").unwrap();
-        writeln!(&mut self.output, "        globals[global_count].name = name;").unwrap();
-        writeln!(&mut self.output, "        globals[global_count].value = TAG_NULL;").unwrap();
-        writeln!(&mut self.output, "        return &globals[global_count++].value;").unwrap();
+        writeln!(
+            &mut self.output,
+            "        globals[global_count].name = name;"
+        )
+        .unwrap();
+        writeln!(
+            &mut self.output,
+            "        globals[global_count].value = TAG_NULL;"
+        )
+        .unwrap();
+        writeln!(
+            &mut self.output,
+            "        return &globals[global_count++].value;"
+        )
+        .unwrap();
         writeln!(&mut self.output, "    }}").unwrap();
         writeln!(&mut self.output, "    return NULL;").unwrap();
         writeln!(&mut self.output, "}}").unwrap();
@@ -328,21 +360,27 @@ impl CCodeGen {
                 }
 
                 Instruction::LoadGlobal(name) => {
-                    let escaped = name
-                        .replace("\\", "\\\\")
-                        .replace("\"", "\\\"");
+                    let escaped = name.replace("\\", "\\\\").replace("\"", "\\\"");
                     writeln!(&mut self.output, "    {{").unwrap();
-                    writeln!(&mut self.output, "        Value* g = get_global(\"{}\");", escaped).unwrap();
+                    writeln!(
+                        &mut self.output,
+                        "        Value* g = get_global(\"{}\");",
+                        escaped
+                    )
+                    .unwrap();
                     writeln!(&mut self.output, "        stack[sp++] = g ? *g : TAG_NULL;").unwrap();
                     writeln!(&mut self.output, "    }}").unwrap();
                 }
 
                 Instruction::StoreGlobal(name) => {
-                    let escaped = name
-                        .replace("\\", "\\\\")
-                        .replace("\"", "\\\"");
+                    let escaped = name.replace("\\", "\\\\").replace("\"", "\\\"");
                     writeln!(&mut self.output, "    {{").unwrap();
-                    writeln!(&mut self.output, "        Value* g = get_global(\"{}\");", escaped).unwrap();
+                    writeln!(
+                        &mut self.output,
+                        "        Value* g = get_global(\"{}\");",
+                        escaped
+                    )
+                    .unwrap();
                     writeln!(&mut self.output, "        if (g) *g = stack[--sp];").unwrap();
                     writeln!(&mut self.output, "    }}").unwrap();
                 }

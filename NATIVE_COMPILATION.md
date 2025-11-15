@@ -2,7 +2,7 @@
 
 ## Overview
 
-TopLang now supports **Ahead-of-Time (AOT) native compilation** to standalone executables using Cranelift. This provides **significant performance improvements** over the bytecode VM by compiling directly to native machine code.
+TopLang supports Ahead-of-Time (AOT) native compilation to standalone executables using Cranelift, providing significant performance improvements over the bytecode VM.
 
 ## Performance Comparison
 
@@ -11,7 +11,7 @@ TopLang now supports **Ahead-of-Time (AOT) native compilation** to standalone ex
 | Tree-walking Interpreter | 1.0x (baseline) | Original interpreter |
 | Bytecode VM (Optimized) | 2.6x faster | Current default with --bytecode |
 | Bytecode VM (NaN-boxed) | 3.1x faster | Maximum VM performance with --nanbox |
-| **Native Compilation** | **5-10x faster** | AOT compilation with Cranelift |
+| Native Compilation | 5-10x faster | AOT compilation with Cranelift |
 
 ## Architecture
 
@@ -39,18 +39,18 @@ TopLang Source (.top)
 
 ### Components
 
-1. **Runtime Library** (`src/runtime.rs`)
+1. Runtime Library (`src/runtime.rs`)
    - NaN-boxed value representation (64-bit)
    - Runtime functions for print, input, arithmetic, arrays, strings
    - Exported as C-compatible library (`libtoplang.a`)
 
-2. **Native Code Generator** (`src/codegen_native.rs`)
+2. Native Code Generator (`src/codegen_native.rs`)
    - Translates bytecode to Cranelift IR
    - Handles stack-to-register conversion
    - Manages function calls and control flow
    - Links with runtime library
 
-3. **Main Compiler** (`src/main.rs`)
+3. Main Compiler (`src/main.rs`)
    - Orchestrates the compilation pipeline
    - Invokes system linker for final executable
 
@@ -114,61 +114,61 @@ Fibonacci(20) =
 
 ### Why Native Compilation is Faster
 
-1. **No Bytecode Interpretation**
+1. No Bytecode Interpretation
    - Direct CPU execution (no VM overhead)
    - Native calling conventions
    - CPU-specific optimizations
 
-2. **Register Allocation**
+2. Register Allocation
    - Cranelift allocates CPU registers efficiently
    - Reduces memory traffic
    - Better cache utilization
 
-3. **Inlining and Optimizations**
+3. Inlining and Optimizations
    - Function inlining
    - Dead code elimination
    - Constant propagation
    - Loop optimizations
 
-4. **Static Linking**
+4. Static Linking
    - All runtime functions resolved at compile time
    - No dynamic dispatch overhead
 
 ### Benchmark Results
 
-**Fibonacci(30):**
+Fibonacci(30):
 - Interpreter: 2,500 ms
 - Bytecode VM: 950 ms  (2.6x faster)
 - NaN-boxed VM: 800 ms (3.1x faster)
-- **Native: 250 ms (10x faster)** 🚀
+- Native: 250 ms (10x faster)
 
-**Array sum (1M elements):**
+Array sum (1M elements):
 - Interpreter: 450 ms
 - Bytecode VM: 180 ms
-- **Native: 50 ms (9x faster)** 🚀
+- Native: 50 ms (9x faster)
 
 ## Implementation Status
 
-### Currently Supported ✅
+### Currently Supported
 
-- [x] Basic arithmetic operations
-- [x] Variables and constants
-- [x] Control flow (if/else, while loops)
-- [x] Functions with parameters and return values
-- [x] Print statements
-- [x] Integer and floating-point numbers
-- [x] Booleans
-- [x] Comparisons and logical operations
-- [x] NaN-boxed value representation
+- Basic arithmetic operations
+- Variables and constants
+- Control flow (if/else, while loops)
+- Functions with parameters and return values
+- Print statements
+- Integer and floating-point numbers
+- Booleans
+- Comparisons and logical operations
+- NaN-boxed value representation
 
-### Coming Soon 🚧
+### Coming Soon
 
-- [ ] Arrays and indexing
-- [ ] String operations
-- [ ] User input (ask statement)
-- [ ] For loops
-- [ ] Advanced optimizations (loop unrolling, SIMD)
-- [ ] Cross-compilation support
+- Arrays and indexing
+- String operations
+- User input (ask statement)
+- For loops
+- Advanced optimizations (loop unrolling, SIMD)
+- Cross-compilation support
 
 ## Technical Details
 
@@ -246,20 +246,20 @@ cargo build --release
 
 ## Future Improvements
 
-1. **Profile-Guided Optimization (PGO)**
+1. Profile-Guided Optimization (PGO)
    - Profile hot paths during execution
    - Recompile with optimizations for hot code
    - Similar to PyPy's approach
 
-2. **SIMD Vectorization**
+2. SIMD Vectorization
    - Use CPU vector instructions for array operations
    - Massive speedup for numerical code
 
-3. **Link-Time Optimization (LTO)**
+3. Link-Time Optimization (LTO)
    - Cross-module inlining
    - Better dead code elimination
 
-4. **Tiered Compilation**
+4. Tiered Compilation
    - Start with interpreted/bytecode mode
    - Compile hot functions to native
    - Best of both worlds (fast startup + peak performance)
@@ -269,7 +269,7 @@ cargo build --release
 | Language | Execution Model | Relative Speed |
 |----------|----------------|----------------|
 | Python | Bytecode VM | 1.0x (baseline) |
-| **TopLang (Native)** | **AOT Compiled** | **5-7x faster than Python** |
+| TopLang (Native) | AOT Compiled | 5-7x faster than Python |
 | LuaJIT | JIT + Tracing | 10-50x faster than Python |
 | Go | AOT Compiled | 20-50x faster than Python |
 | Rust/C | AOT Compiled | 50-100x faster than Python |

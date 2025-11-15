@@ -75,7 +75,7 @@ impl Compiler {
         // Create locals for parameters
         self.begin_scope();
         for param in &function.params {
-            self.add_local(param.clone())?;
+            let _ = self.add_local(param.clone())?;
         }
 
         // Compile function body
@@ -120,7 +120,9 @@ impl Compiler {
                         .emit(Instruction::StoreGlobal(name.clone()), self.current_line);
                 } else {
                     // Local variable
-                    self.add_local(name.clone())?;
+                    let local_idx = self.add_local(name.clone())?;
+                    self.chunk
+                        .emit(Instruction::StoreVar(local_idx), self.current_line);
                 }
                 Ok(())
             }
@@ -490,7 +492,7 @@ impl Compiler {
         }
     }
 
-    fn add_local(&mut self, name: String) -> Result<()> {
+    fn add_local(&mut self, name: String) -> Result<usize> {
         // Check for duplicate in current scope
         for local in self.locals.iter().rev() {
             if local.depth < self.scope_depth {
@@ -508,7 +510,7 @@ impl Compiler {
             name,
             depth: self.scope_depth,
         });
-        Ok(())
+        Ok(self.locals.len() - 1)
     }
 
     fn resolve_local(&self, name: &str) -> Option<usize> {

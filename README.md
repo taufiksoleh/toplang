@@ -1,65 +1,57 @@
-# TopLang - A Simple, Human-First Programming Language
+# TopLang
 
 [![CI](https://github.com/taufiksoleh/toplang/workflows/CI/badge.svg)](https://github.com/taufiksoleh/toplang/actions/workflows/ci.yml)
 [![Code Quality](https://github.com/taufiksoleh/toplang/workflows/Code%20Quality/badge.svg)](https://github.com/taufiksoleh/toplang/actions/workflows/quality.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.74%2B-orange.svg)](https://www.rust-lang.org/)
 
-TopLang is a simple, expressive programming language with natural English-like syntax. It's designed to be easy to learn while being powerful enough to write useful programs. Built with Rust for maximum performance and cross-platform compatibility.
+TopLang is a programming language with English-like syntax designed for readability and ease of learning. The implementation includes a bytecode virtual machine and an optimizing native code compiler, both written in Rust.
 
 ## Features
 
-✨ **Human-Readable Syntax** - Use natural English words instead of symbols
+- Natural language syntax using English keywords
+- Native code compilation with GCC optimization backend
+- Bytecode virtual machine with NaN-boxing value representation
+- Cross-platform support (Linux, macOS, Windows)
+- Zero runtime dependencies for compiled executables
 
-🚀 **Blazing Fast Native Compilation** - Compile to native executables that run at machine speed
+## Performance
 
-🌍 **Cross-Platform** - Works on Windows, macOS, and Linux
+TopLang supports three execution modes with varying performance characteristics:
 
-🎯 **Simple** - Easy to learn and understand
+| Execution Mode | Avg Time | Speedup vs Interpreter |
+|----------------|----------|------------------------|
+| Tree-walking interpreter | 1760ms | 1.0x |
+| Bytecode VM | 768ms | 2.3x |
+| Native compilation | 15ms | 117.3x |
 
-🛠️ **Modern** - Built with modern language design principles
+### Benchmark Results
 
-## ⚡ Performance
+Fibonacci, prime calculation, array operations, nested loops, and factorial benchmarks (Linux x86_64, GCC 13.3.0 with `-O3 -march=native -ffast-math`):
 
-TopLang supports **native compilation** for exceptional performance:
+| Benchmark | Interpreter | Native | Speedup |
+|-----------|-------------|--------|---------|
+| fibonacci | 512ms | 16ms | 31.4x |
+| primes | 483ms | 14ms | 33.7x |
+| array_sum | 1353ms | 15ms | 86.5x |
+| nested_loops | 1101ms | 16ms | 68.4x |
+| factorial | 5350ms | 16ms | 319.6x |
 
-| Execution Mode | Avg Time | vs Interpreter | Status |
-|----------------|----------|----------------|--------|
-| Interpreter | 1760ms | 1.0x | Baseline |
-| Bytecode VM | 768ms | 2.3x faster | ✅ Fast |
-| **Native Compilation** | **15ms** | **117.3x faster** | 🚀 **Production-Ready** |
-
-### Detailed Benchmark Results
-
-| Benchmark | Interpreter | Native | Speedup | Performance Notes |
-|-----------|-------------|--------|---------|-------------------|
-| **fibonacci** | 512ms | 16ms | **31.4x** ⚡ | Loop optimization |
-| **primes** | 483ms | 14ms | **33.7x** ⚡ | Branch prediction + math ops |
-| **array_sum** | 1353ms | 15ms | **86.5x** 🔥 | Memory access optimization |
-| **nested_loops** | 1101ms | 16ms | **68.4x** 🔥 | Loop unrolling + register alloc |
-| **factorial** | 5350ms | 16ms | **319.6x** 💥 | Intensive arithmetic optimization |
-
-**Compilation time:** 260ms average (very fast!)
-
-**System:** Linux x86_64, GCC 13.3.0 with `-O3 -march=native -ffast-math`
-
-See [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md) for complete analysis.
+Native compilation averages 260ms. See [BENCHMARK_RESULTS.md](BENCHMARK_RESULTS.md) for detailed analysis.
 
 ## Installation
 
-TopLang provides multiple installation methods. **No Rust required** for end users!
+Multiple installation methods are available. Rust is only required when building from source.
 
-### Quick Install (Recommended)
+### Quick Install
 
-#### Linux & macOS
-
-Install with a single command:
+#### Linux and macOS
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/taufiksoleh/toplang/main/install.sh | bash
 ```
 
-Or download and run the script manually:
+Manual installation:
 
 ```bash
 wget https://raw.githubusercontent.com/taufiksoleh/toplang/main/install.sh
@@ -69,72 +61,59 @@ chmod +x install.sh
 
 #### Windows
 
-Using PowerShell:
+PowerShell installation:
 
 ```powershell
 irm https://raw.githubusercontent.com/taufiksoleh/toplang/main/install.ps1 | iex
 ```
 
-Or download and run manually:
+Manual installation:
 
 ```powershell
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/taufiksoleh/toplang/main/install.ps1" -OutFile "install.ps1"
 .\install.ps1
 ```
 
-### Homebrew (macOS & Linux)
+### Homebrew (macOS and Linux)
 
 ```bash
-# Add the tap
 brew tap taufiksoleh/toplang https://github.com/taufiksoleh/toplang
-
-# Install toplang
 brew install toplang
-
-# Verify installation
 topc --version
 ```
 
 ### Pre-built Binaries
 
-Download pre-compiled binaries from the [releases page](https://github.com/taufiksoleh/toplang/releases):
+Download binaries from the [releases page](https://github.com/taufiksoleh/toplang/releases/latest):
 
-1. Go to [Releases](https://github.com/taufiksoleh/toplang/releases/latest)
-2. Download the binary for your platform:
-   - **Linux**: `toplang-linux-x64`
-   - **macOS**: `toplang-macos-x64`
-   - **Windows**: `toplang-windows-x64.exe`
-3. Make it executable (Linux/macOS):
-   ```bash
-   chmod +x toplang-*
-   mv toplang-* /usr/local/bin/topc
-   ```
-4. On Windows, add the directory to your PATH
+- Linux: `toplang-linux-x64`
+- macOS: `toplang-macos-x64`
+- Windows: `toplang-windows-x64.exe`
+
+Installation on Linux/macOS:
+
+```bash
+chmod +x toplang-*
+mv toplang-* /usr/local/bin/topc
+```
+
+On Windows, add the binary directory to your PATH environment variable.
 
 ### Building from Source
 
-If you prefer to build from source or want to contribute:
+Requirements:
+- Rust 1.74 or later ([rustup.rs](https://rustup.rs/))
 
-#### Prerequisites
+Build process:
 
-- **Rust** (1.74 or later) - Install from [rustup.rs](https://rustup.rs/)
-
-#### Build Steps
-
-1. Clone this repository:
 ```bash
 git clone https://github.com/taufiksoleh/toplang.git
 cd toplang
-```
-
-2. Build with Cargo:
-```bash
 cargo build --release
 ```
 
-The compiled `topc` executable will be in `target/release/topc`.
+The compiled binary is located at `target/release/topc`. To install system-wide:
 
-3. Optionally, install it to your system:
 ```bash
 cargo install --path .
 ```
@@ -156,48 +135,32 @@ topc path/to/your_program.top
 
 ### Command-line Options
 
-The `topc` compiler supports several execution modes:
+Execution modes:
 
-**Interpretation Mode (default):**
 ```bash
+# Interpretation (default)
 topc program.top
+
+# Bytecode VM
+topc --bytecode program.top
+topc --bytecode --nanbox program.top  # With NaN-boxing optimization
+
+# Native compilation
+topc --compile program.top
+topc --compile program.top -o myapp   # Custom output name
+topc --compile -v program.top         # Verbose mode (preserves C source)
 ```
 
-**Bytecode VM Mode (2.3x faster):**
-```bash
-topc --bytecode program.top        # Standard VM
-topc --bytecode --nanbox program.top  # Optimized VM
-```
-
-**Native Compilation (117.3x faster!):** 🚀
-```bash
-topc --compile program.top           # Creates native executable
-topc --compile program.top -o myapp  # Specify output name
-topc --compile -v program.top        # Verbose (keep generated C code)
-```
-
-**Other Options:**
-- `-t, --show-tokens` - Display tokens after lexing
-- `-a, --show-ast` - Display the Abstract Syntax Tree after parsing
+Additional options:
+- `-t, --show-tokens` - Display lexer tokens
+- `-a, --show-ast` - Display abstract syntax tree
 - `-v, --verbose` - Enable verbose output
-- `-h, --help` - Display help information
-- `-V, --version` - Display version information
-
-**Performance Comparison:**
-```bash
-# Interpreter: 1760ms average
-topc program.top
-
-# Bytecode VM: 768ms average (2.3x faster)
-topc --bytecode --nanbox program.top
-
-# Native: 15ms average (117.3x faster!) 🚀
-topc --compile program.top && ./program
-```
+- `-h, --help` - Display help
+- `-V, --version` - Display version
 
 ## Language Syntax
 
-TopLang uses natural English words to make programming more intuitive:
+TopLang employs English keywords for improved readability:
 
 ### Variables
 
@@ -369,26 +332,22 @@ MIT License - See LICENSE file for details
 
 ## Architecture
 
-TopLang uses a modern interpreter architecture:
+The TopLang compiler implements a multi-stage compilation pipeline:
 
-1. **Lexer** - Tokenizes the source code into meaningful tokens
-2. **Parser** - Builds an Abstract Syntax Tree (AST) from tokens
-3. **Interpreter** - Directly executes the AST using a tree-walking interpreter
+1. **Lexer** - Tokenizes source code
+2. **Parser** - Constructs an abstract syntax tree (AST)
+3. **Execution backends**:
+   - Tree-walking interpreter for direct AST evaluation
+   - Bytecode compiler and virtual machine
+   - Native code generator via C transpilation
 
-This architecture ensures:
-- Fast compilation times
-- Cross-platform compatibility
-- No external dependencies
-- Easy debugging and error messages
+## Implementation
 
-## Why Rust?
+The compiler is implemented in Rust, providing:
+- Memory safety without garbage collection
+- Cross-platform compilation from a single codebase
+- Native performance with zero-cost abstractions
+- Comprehensive tooling via Cargo
 
-The compiler is written in Rust for several reasons:
-- **Memory Safety** - No segfaults or memory leaks
-- **Cross-Platform** - Single codebase works everywhere
-- **Performance** - Fast, native performance
-- **Modern Tooling** - Cargo makes building and testing easy
-- **No Runtime Dependencies** - Static linking produces standalone executables
-
-**Note**: End users don't need Rust installed! The pre-built binaries are completely standalone and have no dependencies. Rust is only required if you want to build the compiler from source or contribute to development.
+End users do not require Rust installation; pre-built binaries have no runtime dependencies due to static linking.
 

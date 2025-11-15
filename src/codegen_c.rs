@@ -202,6 +202,62 @@ impl CCodeGen {
         writeln!(&mut self.output, "}}").unwrap();
         writeln!(&mut self.output).unwrap();
 
+        // Input function
+        writeln!(&mut self.output, "Value value_input(const char* prompt) {{").unwrap();
+        writeln!(&mut self.output, "    if (prompt) {{").unwrap();
+        writeln!(&mut self.output, "        printf(\"%s\", prompt);").unwrap();
+        writeln!(&mut self.output, "        fflush(stdout);").unwrap();
+        writeln!(&mut self.output, "    }}").unwrap();
+        writeln!(&mut self.output).unwrap();
+        writeln!(&mut self.output, "    char buffer[1024];").unwrap();
+        writeln!(&mut self.output, "    if (!fgets(buffer, sizeof(buffer), stdin)) {{").unwrap();
+        writeln!(&mut self.output, "        return make_string(\"\");").unwrap();
+        writeln!(&mut self.output, "    }}").unwrap();
+        writeln!(&mut self.output).unwrap();
+        writeln!(&mut self.output, "    // Remove trailing newline").unwrap();
+        writeln!(&mut self.output, "    size_t len = strlen(buffer);").unwrap();
+        writeln!(&mut self.output, "    if (len > 0 && buffer[len-1] == '\\n') {{").unwrap();
+        writeln!(&mut self.output, "        buffer[len-1] = '\\0';").unwrap();
+        writeln!(&mut self.output, "    }}").unwrap();
+        writeln!(&mut self.output).unwrap();
+        writeln!(&mut self.output, "    // Try to parse as number").unwrap();
+        writeln!(&mut self.output, "    char* endptr;").unwrap();
+        writeln!(&mut self.output, "    double num = strtod(buffer, &endptr);").unwrap();
+        writeln!(&mut self.output, "    if (*buffer && !*endptr) {{").unwrap();
+        writeln!(&mut self.output, "        return make_number(num);").unwrap();
+        writeln!(&mut self.output, "    }}").unwrap();
+        writeln!(&mut self.output).unwrap();
+        writeln!(&mut self.output, "    // Return as string").unwrap();
+        writeln!(&mut self.output, "    char* str = strdup(buffer);").unwrap();
+        writeln!(&mut self.output, "    return make_string(str);").unwrap();
+        writeln!(&mut self.output, "}}").unwrap();
+        writeln!(&mut self.output).unwrap();
+
+        // Global variables storage
+        writeln!(&mut self.output, "#define MAX_GLOBALS 256").unwrap();
+        writeln!(&mut self.output, "typedef struct {{").unwrap();
+        writeln!(&mut self.output, "    const char* name;").unwrap();
+        writeln!(&mut self.output, "    Value value;").unwrap();
+        writeln!(&mut self.output, "}} GlobalVar;").unwrap();
+        writeln!(&mut self.output).unwrap();
+        writeln!(&mut self.output, "GlobalVar globals[MAX_GLOBALS];").unwrap();
+        writeln!(&mut self.output, "int global_count = 0;").unwrap();
+        writeln!(&mut self.output).unwrap();
+        writeln!(&mut self.output, "Value* get_global(const char* name) {{").unwrap();
+        writeln!(&mut self.output, "    for (int i = 0; i < global_count; i++) {{").unwrap();
+        writeln!(&mut self.output, "        if (strcmp(globals[i].name, name) == 0) {{").unwrap();
+        writeln!(&mut self.output, "            return &globals[i].value;").unwrap();
+        writeln!(&mut self.output, "        }}").unwrap();
+        writeln!(&mut self.output, "    }}").unwrap();
+        writeln!(&mut self.output, "    if (global_count < MAX_GLOBALS) {{").unwrap();
+        writeln!(&mut self.output, "        globals[global_count].name = name;").unwrap();
+        writeln!(&mut self.output, "        globals[global_count].value = TAG_NULL;").unwrap();
+        writeln!(&mut self.output, "        return &globals[global_count++].value;").unwrap();
+        writeln!(&mut self.output, "    }}").unwrap();
+        writeln!(&mut self.output, "    return NULL;").unwrap();
+        writeln!(&mut self.output, "}}").unwrap();
+        writeln!(&mut self.output).unwrap();
+
         Ok(())
     }
 
@@ -269,6 +325,26 @@ impl CCodeGen {
 
                 Instruction::StoreVar(idx) => {
                     writeln!(&mut self.output, "    locals[{}] = stack[--sp];", idx).unwrap();
+                }
+
+                Instruction::LoadGlobal(name) => {
+                    let escaped = name
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"");
+                    writeln!(&mut self.output, "    {{").unwrap();
+                    writeln!(&mut self.output, "        Value* g = get_global(\"{}\");", escaped).unwrap();
+                    writeln!(&mut self.output, "        stack[sp++] = g ? *g : TAG_NULL;").unwrap();
+                    writeln!(&mut self.output, "    }}").unwrap();
+                }
+
+                Instruction::StoreGlobal(name) => {
+                    let escaped = name
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"");
+                    writeln!(&mut self.output, "    {{").unwrap();
+                    writeln!(&mut self.output, "        Value* g = get_global(\"{}\");", escaped).unwrap();
+                    writeln!(&mut self.output, "        if (g) *g = stack[--sp];").unwrap();
+                    writeln!(&mut self.output, "    }}").unwrap();
                 }
 
                 Instruction::Add | Instruction::AddInt => {
@@ -373,6 +449,23 @@ impl CCodeGen {
 
                 Instruction::Print => {
                     writeln!(&mut self.output, "    value_print(stack[--sp]);").unwrap();
+                }
+
+                Instruction::Input(prompt) => {
+                    if let Some(p) = prompt {
+                        let escaped = p
+                            .replace("\\", "\\\\")
+                            .replace("\"", "\\\"")
+                            .replace("\n", "\\n");
+                        writeln!(
+                            &mut self.output,
+                            "    stack[sp++] = value_input(\"{}\");",
+                            escaped
+                        )
+                        .unwrap();
+                    } else {
+                        writeln!(&mut self.output, "    stack[sp++] = value_input(NULL);").unwrap();
+                    }
                 }
 
                 Instruction::Pop => {

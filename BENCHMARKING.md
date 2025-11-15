@@ -1,18 +1,18 @@
-# TopLang Benchmarking Pipeline
+# TopLang Benchmarking
 
-Comprehensive performance benchmarking system for TopLang with multi-VM comparison, Python baseline, historical tracking, and CI/CD integration.
+Performance benchmarking system for TopLang with multi-VM comparison, Python baseline, historical tracking, and CI/CD integration.
 
-## 🎯 Overview
+## Overview
 
 The benchmarking pipeline provides:
 
-- **Multi-VM Comparison**: Interpreter, Bytecode VM, NaN Boxing VM
-- **Python Baseline**: Compare TopLang performance against Python 3
-- **Historical Tracking**: JSON-based results with git commit tracking
-- **Automated CI/CD**: GitHub Actions integration for continuous benchmarking
-- **Detailed Reports**: Tables, speedup analysis, and visualizations
+- Multi-VM comparison (Interpreter, Bytecode VM, NaN Boxing VM)
+- Python baseline for performance comparison
+- Historical tracking with JSON-based results and git commit hashes
+- GitHub Actions integration for continuous benchmarking
+- Detailed performance reports and analysis
 
-## 📁 Structure
+## Structure
 
 ```
 benchmarks/
@@ -32,68 +32,62 @@ benchmarks/
 └── run_with_tracking.sh  # Advanced runner with JSON output
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Build Release Binaries
+### Build Release Binaries
 
 ```bash
 cargo build --release
 ```
 
-### 2. Run Simple Benchmarks
+### Run Benchmarks
 
 ```bash
 chmod +x benchmarks/run_all.sh
 ./benchmarks/run_all.sh
 ```
 
-Output example:
+Example output:
 ```
-╔═══════════════════════════════════════════════════════════╗
-║        TopLang vs Python Performance Benchmark            ║
-╚═══════════════════════════════════════════════════════════╝
+TopLang vs Python Performance Benchmark
 
-📊 Benchmarking: fibonacci
+Benchmarking: fibonacci
    TopLang (Interpreter)...  520ms
    TopLang (Bytecode)...     198ms
    TopLang (NaN Boxing)...   172ms
    Python 3...               123ms
 
-┌─────────────────┬──────────┬──────────┬──────────┬──────────┐
-│ Benchmark       │ Interp   │ Bytecode │ NanBox   │ Python   │
-├─────────────────┼──────────┼──────────┼──────────┼──────────┤
-│ fibonacci       │   520ms  │   198ms  │   172ms  │   123ms  │
-│ primes          │   720ms  │   275ms  │   239ms  │   156ms  │
-│ array_sum       │  1450ms  │   592ms  │   478ms  │   312ms  │
-└─────────────────┴──────────┴──────────┴──────────┴──────────┘
+Benchmark       | Interp  | Bytecode | NanBox  | Python
+----------------|---------|----------|---------|--------
+fibonacci       | 520ms   | 198ms    | 172ms   | 123ms
+primes          | 720ms   | 275ms    | 239ms   | 156ms
+array_sum       | 1450ms  | 592ms    | 478ms   | 312ms
 
-📈 Average Speedups:
+Average Speedups:
    Bytecode vs Interpreter:  2.63x
    NaN Boxing vs Bytecode:   1.19x
    TopLang vs Python:        1.40x (71.4% of Python speed)
-
-🎯 TopLang is currently at 71.4% of Python's speed
 ```
 
-### 3. Run with Historical Tracking
+### Run with Historical Tracking
 
 ```bash
 chmod +x benchmarks/run_with_tracking.sh
 ./benchmarks/run_with_tracking.sh
 ```
 
-This saves results to `benchmarks/results/bench_TIMESTAMP.json` and compares with previous runs.
+Results are saved to `benchmarks/results/bench_TIMESTAMP.json` for comparison with previous runs.
 
-### 4. Use Rust Benchmark Runner
+### Rust Benchmark Runner
 
 ```bash
 cargo build --release --bin benchmark
 ./target/release/benchmark
 ```
 
-Provides detailed tables with min/max/avg times for each benchmark.
+Provides detailed tables with minimum, maximum, and average times for each benchmark.
 
-## 📊 Benchmark Suite
+## Benchmark Suite
 
 ### Current Benchmarks
 
@@ -137,7 +131,7 @@ BENCHMARKS=(
 )
 ```
 
-## 📈 Results Format
+## Results Format
 
 JSON results are saved with the following structure:
 
@@ -169,7 +163,7 @@ JSON results are saved with the following structure:
 }
 ```
 
-## 🔄 CI/CD Integration
+## CI/CD Integration
 
 ### GitHub Actions
 
@@ -204,20 +198,20 @@ curl https://raw.githubusercontent.com/nektos/act/master/install.sh | sudo bash
 act -j benchmark
 ```
 
-## 📊 Interpreting Results
+## Interpreting Results
 
 ### Speedup Metrics
 
-- **Bytecode vs Interpreter**: Shows benefit of bytecode compilation
+- Bytecode vs Interpreter: Shows benefit of bytecode compilation
   - Target: >2.0x (achieved: 2.6x)
 
-- **NaN Boxing vs Bytecode**: Shows benefit of NaN boxing optimization
+- NaN Boxing vs Bytecode: Shows benefit of NaN boxing optimization
   - Target: >1.15x (achieved: 1.19x)
 
-- **Total Speedup**: Combined effect of all optimizations
+- Total Speedup: Combined effect of all optimizations
   - Target: >3.0x (achieved: 3.09x)
 
-- **vs Python**: Performance relative to CPython
+- vs Python: Performance relative to CPython
   - Target: >0.8x (80% of Python) (current: 71%)
   - Goal: >1.0x (faster than Python)
 
@@ -225,12 +219,12 @@ act -j benchmark
 
 | VM Type | Target Speedup | Current | Status |
 |---------|---------------|---------|--------|
-| Bytecode VM | 2.0x vs Interp | 2.6x | ✅ Exceeded |
-| NaN Boxing | 1.4x vs Bytecode | 1.19x | ⚠️ Close |
-| Total | 3.0x vs Interp | 3.09x | ✅ Achieved |
-| vs Python | 80% (0.8x) | 71% (0.71x) | 🎯 In Progress |
+| Bytecode VM | 2.0x vs Interp | 2.6x | Exceeded |
+| NaN Boxing | 1.4x vs Bytecode | 1.19x | Close |
+| Total | 3.0x vs Interp | 3.09x | Achieved |
+| vs Python | 80% (0.8x) | 71% (0.71x) | In Progress |
 
-## 🔧 Advanced Usage
+## Advanced Usage
 
 ### Custom Benchmark Runs
 
@@ -282,7 +276,7 @@ jq -s '.[0].benchmarks.fibonacci.nanbox.avg_ms - .[1].benchmarks.fibonacci.nanbo
   bench_new.json bench_old.json
 ```
 
-## 📝 Best Practices
+## Best Practices
 
 ### For Accurate Benchmarks:
 
@@ -322,7 +316,7 @@ jq -s '.[0].benchmarks.fibonacci.nanbox.avg_ms - .[1].benchmarks.fibonacci.nanbo
 3. **Same Environment**: Run benchmarks on same machine
 4. **Warm-up Runs**: Consider JIT warm-up for some implementations
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Command not found: bc"
 
@@ -361,13 +355,13 @@ chmod +x benchmarks/python/*.py
 - Check CPU frequency scaling
 - Ensure machine isn't thermal throttling
 
-## 📚 References
+## References
 
 - [Performance Roadmap](PERFORMANCE_ROADMAP.md) - Optimization strategies
 - [NaN Boxing Results](NAN_BOXING_RESULTS.md) - NaN boxing implementation details
-- [Optimization Summary](OPTIMIZATION_SUMMARY.md) - All optimizations applied
+- [Benchmark Results](BENCHMARK_RESULTS.md) - Detailed benchmark analysis
 
-## 🎯 Future Enhancements
+## Future Enhancements
 
 - [ ] Add memory profiling (heap usage, allocations)
 - [ ] Implement regression detection
@@ -378,15 +372,9 @@ chmod +x benchmarks/python/*.py
 - [ ] Continuous benchmarking dashboard
 - [ ] Performance badges in README
 
-## 📞 Support
+## Support
 
-For questions or issues with benchmarking:
-1. Check this documentation
-2. Review benchmark scripts for examples
+For benchmarking questions or issues:
+1. Review this documentation
+2. Examine benchmark scripts for examples
 3. Open an issue with benchmark results attached
-
----
-
-**Last Updated**: 2025-11-14
-**Benchmark Version**: 1.0
-**TopLang Version**: 0.0.22
